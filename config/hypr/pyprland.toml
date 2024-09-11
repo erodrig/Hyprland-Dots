@@ -10,3 +10,15 @@ animation = "fromTop"
 command = "kitty --class kitty-dropterm"
 class = "kitty-dropterm"
 size = "75% 60%"
+
+#[scratchpads.music]
+#animation = "fromTop"
+#command = "lollypop"
+#size = "75% 60%"
+
+[scratchpads.ncmpcpp]
+animation = "fromTop"
+command = "kitty --class ncmpcpp ncmpcpp"
+size = "75% 60%"
+
+
