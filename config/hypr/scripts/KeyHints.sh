@@ -28,10 +28,11 @@ GDK_BACKEND=$BACKEND yad \
 " SHIFT E" "KooL Hyprland Settings Menu" "" \
 "" "" "" \
 " enter" "Terminal" "(kitty)" \
+" Shif /" "Music " "(ncmpcpp)" \
 " SHIFT enter" "DropDown Terminal" " Q to close" \
 " B" "Launch Browser" "(Default browser)" \
 " A" "Desktop Overview" "(AGS - if opted to install)" \
-" D" "Application Launcher" "(rofi-wayland)" \
+" Space" "Application Launcher" "(rofi-wayland)" \
 " E" "Open File Manager" "(Thunar)" \
 " S" "Google Search using rofi" "(rofi)" \
 " Q" "close active window" "(not kill)" \
@@ -46,12 +47,12 @@ GDK_BACKEND=$BACKEND yad \
 " ALT B" "Choose waybar layout" "(waybar layout)" \
 " ALT R" "Reload Waybar swaync Rofi" "CHECK NOTIFICATION FIRST!!!" \
 " SHIFT N" "Launch Notification Panel" "swaync Notification Center" \
-" Print" "screenshot" "(grim)" \
-" Shift Print" "screenshot region" "(grim + slurp)" \
+" P" "screenshot" "(grim)" \
+" Shift P" "screenshot region" "(grim + slurp)" \
 " Shift S" "screenshot region" "(swappy)" \
-" CTRL Print" "screenshot timer 5 secs " "(grim)" \
-" CTRL SHIFT Print" "screenshot timer 10 secs " "(grim)" \
-"ALT Print" "Screenshot active window" "active window only" \
+" CTRL P" "screenshot timer 5 secs " "(grim)" \
+" CTRL SHIFT P" "screenshot timer 10 secs " "(grim)" \
+"ALT P" "Screenshot active window" "active window only" \
 "CTRL ALT P" "power-menu" "(wlogout)" \
 "CTRL ALT L" "screen lock" "(hyprlock)" \
 "CTRL ALT Del" "Hyprland Exit" "(NOTE: Hyprland Will exit immediately)" \
