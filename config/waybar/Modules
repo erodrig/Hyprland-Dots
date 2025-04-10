@@ -100,6 +100,7 @@
     //"format": " {:%I:%M %p}", // AM PM format
     "format": " {:%H:%M:%S}", // 24H
 	"format-alt": " {:%H:%M   %Y, %d %B, %A}",
+	"timezone": "America/Argentina/Buenos_Aires",
 	"tooltip-format": "<tt><small>{calendar}</small></tt>",
 	"calendar": {
 		"mode": "year",
