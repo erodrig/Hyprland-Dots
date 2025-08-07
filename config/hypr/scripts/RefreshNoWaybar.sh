@@ -28,6 +28,9 @@ done
 # quit ags & relaunch ags
 #ags -q && ags &
 
+# quit quickshell & relaunch quickshell
+#pkill qs && qs &
+
 # Wallust refresh
 ${SCRIPTSDIR}/WallustSwww.sh &
 
