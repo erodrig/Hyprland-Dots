@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # /* ---- 💫 https://github.com/JaKooLit 💫 ---- */
 # This script for selecting wallpapers (SUPER W)
 
@@ -101,9 +101,21 @@ menu() {
 # Offer SDDM Simple Wallpaper Option (only for non-video wallpapers)
 set_sddm_wallpaper() {
   sleep 1
-  sddm_simple="/usr/share/sddm/themes/simple_sddm_2"
 
-  if [ -d "$sddm_simple" ]; then
+  # Resolve SDDM themes directory (standard and NixOS path)
+  local sddm_themes_dir=""
+  if [ -d "/usr/share/sddm/themes" ]; then
+    sddm_themes_dir="/usr/share/sddm/themes"
+  elif [ -d "/run/current-system/sw/share/sddm/themes" ]; then
+    sddm_themes_dir="/run/current-system/sw/share/sddm/themes"
+  fi
+
+  [ -z "$sddm_themes_dir" ] && return 0
+
+  local sddm_simple="$sddm_themes_dir/simple_sddm_2"
+
+  # Only prompt if theme exists and its Backgrounds directory is writable
+  if [ -d "$sddm_simple" ] && [ -w "$sddm_simple/Backgrounds" ]; then
 
     # Check if yad is running to avoid multiple notifications
     if pidof yad >/dev/null; then
@@ -123,9 +135,9 @@ set_sddm_wallpaper() {
         notify-send -i "$iDIR/error.png" "Missing $terminal" "Install $terminal to enable setting of wallpaper background"
         exit 1
       fi
-	  
-	  exec $SCRIPTSDIR/sddm_wallpaper.sh --normal
-    
+
+      exec "$SCRIPTSDIR/sddm_wallpaper.sh" --normal
+
     fi
   fi
 }
@@ -168,8 +180,8 @@ apply_image_wallpaper() {
 
   swww img -o "$focused_monitor" "$image_path" $SWWW_PARAMS
 
-  # Run additional scripts
-  "$SCRIPTSDIR/WallustSwww.sh"
+  # Run additional scripts (pass the image path to avoid cache race conditions)
+  "$SCRIPTSDIR/WallustSwww.sh" "$image_path"
   sleep 2
   "$SCRIPTSDIR/Refresh.sh"
   sleep 1

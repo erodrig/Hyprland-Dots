@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 # /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  #
 # for Semi-Manual upgrading your system.
 # NOTE: requires rsync 
@@ -26,6 +26,31 @@ echo -e "\e[35m
     ╩ ╩└─┘└─┘╩═╝  ═╩╝└─┘ ┴ └─┘ upgrade.sh
 \e[0m"
 printf "\n%.0s" {1..1}  
+
+# On Ubuntu/Debian, warn about required Hyprland version and prompt to continue
+if grep -iqE '^(ID_LIKE|ID)=.*(ubuntu|debian)' /etc/os-release >/dev/null 2>&1; then
+  echo "${WARNING} These Dotfiles are only supported on Hyprland 0.51.1 or greater. Do not install on older revisions.${RESET}"
+  while true; do
+    echo -n "${CAT} Do you want to continue anyway? (y/N): ${RESET}"
+    read _continue
+    _continue=$(echo "${_continue}" | tr '[:upper:]' '[:lower:]')
+    case "${_continue}" in
+      y|yes)
+        echo "${NOTE} Proceeding on Ubuntu/Debian by user confirmation." 
+        break
+        ;;
+      n|no|"")
+        printf "\n%.0s" {1..1}
+        echo "${INFO} Aborting per user choice. No changes made." 
+        printf "\n%.0s" {1..1}
+        exit 1
+        ;;
+      *)
+        echo "${WARN} Please answer 'y' or 'n'." 
+        ;;
+    esac
+  done
+fi
 
 echo "${WARNING}A T T E N T I O N !${RESET}"
 echo "${SKY_BLUE}This script is meant to manually upgrade your KooL Hyprland Dots${RESET}"
@@ -171,7 +196,8 @@ if version_gt "$latest_version" "$stored_version"; then
         chmod +x "$HOME/.config/hypr/scripts/"* 2>&1 | tee -a "$LOG"
         chmod +x "$HOME/.config/hypr/UserScripts/"* 2>&1 | tee -a "$LOG"
         # Set executable for initial-boot.sh
-        chmod +x "$HOME/.config/hypr/initial-boot.sh" 2>&1 | tee -a "$LOG"		
+        chmod +x "$HOME/.config/hypr/initial-boot.sh" 2>&1 | tee -a "$LOG"
+        
     else
         echo "$MAGENTA Upgrade declined. No files or directories changed" 2>&1 | tee -a "$LOG"
     fi
