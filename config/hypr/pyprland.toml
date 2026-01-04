@@ -14,4 +14,5 @@ size = "75% 60%"
 [scratchpads.ncmpcpp]
 animation = "fromTop"
 command = "kitty --class ncmpcpp ncmpcpp"
+class = "ncmpcpp"
 size = "75% 60%"
