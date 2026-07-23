@@ -1,4 +1,4 @@
-//* ---- 💫 https://github.com/JaKooLit 💫 ---- *//
+//* ---- 💫 https://github.com/LinuxBeginnings 💫 ---- *//
 /* Waybar Modules - Custom Modules */
 /* Basically created to reduce the lines in Waybar Modules bank */
 /* NOTE: This is only for Custom Modules */
@@ -16,6 +16,15 @@
 	"exec": "$HOME/.config/hypr/UserScripts/WeatherWrap.sh",
 	//"exec-if": "ping wttr.in -c1",
 	"tooltip": true,
+},
+
+"custom/weather2": {
+    "exec": "waybar-weather",
+    "restart-interval": 60,
+    "return-type": "json",
+    "hide-empty-text": true,
+    "on-click": "pkill -USR1 waybar-weather"
+    // "on-click": "flatpak run io.github.amit9838.mousam"
 },
 
 "custom/hyprpicker": {
@@ -70,6 +79,17 @@
 	"tooltip-format": "Left Click: Quick Tips\nRight Click: Keybinds",
 },
 
+// External monitor brightness (ddcutil)
+"custom/brightness_external": {
+	"format": "{}",
+	"return-type": "json",
+	"interval": 2,
+	"exec": "$HOME/.config/hypr/scripts/ExternalBrightness.sh --get",
+	"on-scroll-up": "$HOME/.config/hypr/scripts/ExternalBrightness.sh --inc",
+	"on-scroll-down": "$HOME/.config/hypr/scripts/ExternalBrightness.sh --dec",
+	"tooltip": true
+},
+
 "custom/dot_update": {
 	"format": " 󰁈 ",
 	"on-click": "$HOME/.config/hypr/scripts/KooLsDotsUpdate.sh",
@@ -94,6 +114,17 @@
 	"interval": 1,
 	"format": " {}",
 	"on-click": "$HOME/.config/hypr/scripts/KeyboardLayout.sh switch",
+},
+"custom/hypr_layout": {
+	"exec": "$HOME/.config/hypr/scripts/HyprLayoutModule.sh status",
+	"return-type": "json",
+	"interval": 2,
+	"signal": 8,
+	"format": "{}",
+	"on-click": "$HOME/.config/hypr/scripts/HyprLayoutModule.sh menu",
+	"on-click-right": "$HOME/.config/hypr/scripts/HyprLayoutModule.sh next",
+	"tooltip": true,
+	"escape": false
 },
 
 "custom/light_dark": {
@@ -136,7 +167,9 @@
 // This is a custom cava visualizer
 "custom/cava_mviz": {
 	"exec": "$HOME/.config/hypr/scripts/WaybarCava.sh",
-	"format": "{}"
+	"format": "{}",
+	"return-type": "text",
+	"tooltip": false
 },
 
 "custom/playerctl": {
@@ -152,7 +185,7 @@
 	"on-scroll-down": "$HOME/.config/hypr/scripts/Volume.sh --dec",
 	"smooth-scrolling-threshold": 1,
 },
-    
+
 "custom/power": {
 	"format": " ⏻ ",
 	"on-click": "$HOME/.config/hypr/scripts/Wlogout.sh",
@@ -167,10 +200,10 @@
     "tooltip": true,
 	"tooltip-format": "Left Click: Reboot",
 },
-    
+
 "custom/quit": {
     "format": "󰗼",
-    "on-click": "hyprctl dispatch exit",
+    "on-click": "$HOME/.config/hypr/scripts/Logout.sh",
     "tooltip": true,
 	"tooltip-format": "Left Click: Exit Hyprland",
 },

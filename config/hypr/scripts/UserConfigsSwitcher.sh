@@ -1,8 +1,13 @@
 #!/usr/bin/env bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
 # Script to manage UserConfigs and UserConfigsBak
 
-HYPR_CONFIG_DIR="$HOME/.config/hypr"
+HYPR_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
 USER_CONFIGS="$HYPR_CONFIG_DIR/UserConfigs"
 USER_CONFIGS_BAK="$HYPR_CONFIG_DIR/UserConfigsBak"
 

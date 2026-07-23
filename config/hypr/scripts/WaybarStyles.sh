@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
 # Script for waybar styles
 
 IFS=$'\n\t'
 
 # Define directories
-waybar_styles="$HOME/.config/waybar/style"
-waybar_style="$HOME/.config/waybar/style.css"
-SCRIPTSDIR="$HOME/.config/hypr/scripts"
-rofi_config="$HOME/.config/rofi/config-waybar-style.rasi"
+waybar_styles="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/style"
+waybar_style="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/style.css"
+SCRIPTSDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts"
+rofi_config="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-waybar-style.rasi"
 msg=' 🎌 NOTE: Some waybar STYLES NOT fully compatible with some LAYOUTS'
 
 # Apply selected style

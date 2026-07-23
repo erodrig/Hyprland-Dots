@@ -1,9 +1,14 @@
 #!/usr/bin/env bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
 # Simple bash script to check and will try to update your system
 
 # Local Paths
-iDIR="$HOME/.config/swaync/images"
+iDIR="${XDG_CONFIG_HOME:-$HOME/.config}/swaync/images"
 
 # Check for required tools (kitty)
 if ! command -v kitty &> /dev/null; then

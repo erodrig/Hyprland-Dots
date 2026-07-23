@@ -30,7 +30,7 @@
             "type": "command",
             "key": " ",
             "keyColor": "blue",
-            "text": "echo JaKooLit Version: ${DOTS_VERSION}"
+            "text": "echo LinuxBeginnings Version: ${DOTS_VERSION}"
         },
         {
             "type": "wm",

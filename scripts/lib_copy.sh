@@ -1,14 +1,21 @@
 #!/usr/bin/env bash
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
 # Copy helpers split into phases to keep copy.sh lean.
 
 copy_phase1() {
   local log="$1"
+  local base="${DOTFILES_DIR:-.}"
   local dirs="fastfetch kitty rofi swaync"
   for DIR2 in $dirs; do
-    local DIRPATH="$HOME/.config/$DIR2"
+    local DIRPATH="${XDG_CONFIG_HOME:-$HOME/.config}/$DIR2"
     if [ -d "$DIRPATH" ]; then
       while true; do
-        printf "\n${INFO:-[INFO]} Found ${YELLOW:-}$DIR2${RESET:-} config found in ~/.config/\n"
+        printf "\n${INFO:-[INFO]} Found ${YELLOW:-}$DIR2${RESET:-} config found in ${XDG_CONFIG_HOME:-$HOME/.config}/\n"
         echo -n "${CAT:-[ACTION]} Do you want to replace ${YELLOW:-}$DIR2${RESET:-} config? (y/n): "
         read DIR1_CHOICE
         case "$DIR1_CHOICE" in
@@ -16,17 +23,17 @@ copy_phase1() {
           BACKUP_DIR=$(get_backup_dirname)
           mv "$DIRPATH" "$DIRPATH-backup-$BACKUP_DIR" 2>&1 | tee -a "$log"
           echo -e "${NOTE:-[NOTE]} - Backed up $DIR2 to $DIRPATH-backup-$BACKUP_DIR." 2>&1 | tee -a "$log"
-          cp -r "config/$DIR2" "$HOME/.config/$DIR2" 2>&1 | tee -a "$log"
+          cp -r "$base/config/$DIR2" "${XDG_CONFIG_HOME:-$HOME/.config}/$DIR2" 2>&1 | tee -a "$log"
           echo -e "${OK:-[OK]} - Replaced $DIR2 with new configuration." 2>&1 | tee -a "$log"
           if [ "$DIR2" = "rofi" ]; then
             if [ -d "$DIRPATH-backup-$BACKUP_DIR/themes" ]; then
               for file in "$DIRPATH-backup-$BACKUP_DIR/themes"/*; do
                 [ -e "$file" ] || continue
-                cp -n "$file" "$HOME/.config/rofi/themes/" >>"$log" 2>&1 || true
+                cp -n "$file" "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/themes/" >>"$log" 2>&1 || true
               done || true
             fi
             if [ -f "$DIRPATH-backup-$BACKUP_DIR/0-shared-fonts.rasi" ]; then
-              cp "$DIRPATH-backup-$BACKUP_DIR/0-shared-fonts.rasi" "$HOME/.config/rofi/0-shared-fonts.rasi" >>"$log" 2>&1
+              cp "$DIRPATH-backup-$BACKUP_DIR/0-shared-fonts.rasi" "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/0-shared-fonts.rasi" >>"$log" 2>&1
             fi
           fi
           break
@@ -39,7 +46,7 @@ copy_phase1() {
         esac
       done
     else
-      cp -r "config/$DIR2" "$HOME/.config/$DIR2" 2>&1 | tee -a "$log"
+      cp -r "$base/config/$DIR2" "${XDG_CONFIG_HOME:-$HOME/.config}/$DIR2" 2>&1 | tee -a "$log"
       echo -e "${OK:-[OK]} - Copy completed for ${YELLOW:-}$DIR2${RESET:-}" 2>&1 | tee -a "$log"
     fi
   done
@@ -47,8 +54,9 @@ copy_phase1() {
 
 copy_waybar() {
   local log="$1"
+  local base="${DOTFILES_DIR:-.}"
   local DIRW="waybar"
-  local DIRPATHw="$HOME/.config/$DIRW"
+  local DIRPATHw="${XDG_CONFIG_HOME:-$HOME/.config}/$DIRW"
   if [ -d "$DIRPATHw" ]; then
     while true; do
       echo -n "${CAT:-[ACTION]} Do you want to replace ${YELLOW:-}$DIRW${RESET:-} config? (y/n): "
@@ -58,7 +66,7 @@ copy_waybar() {
         BACKUP_DIR=$(get_backup_dirname)
         cp -r "$DIRPATHw" "$DIRPATHw-backup-$BACKUP_DIR" 2>&1 | tee -a "$log"
         echo -e "${NOTE:-[NOTE]} - Backed up $DIRW to $DIRPATHw-backup-$BACKUP_DIR." 2>&1 | tee -a "$log"
-        rm -rf "$DIRPATHw" && cp -r "config/$DIRW" "$DIRPATHw" 2>&1 | tee -a "$log"
+        rm -rf "$DIRPATHw" && cp -r "$base/config/$DIRW" "$DIRPATHw" 2>&1 | tee -a "$log"
         for file in "config" "style.css"; do
           symlink="$DIRPATHw-backup-$BACKUP_DIR/$file"
           target_file="$DIRPATHw/$file"
@@ -72,23 +80,23 @@ copy_waybar() {
         for dir in "$DIRPATHw-backup-$BACKUP_DIR/configs"/*; do
           [ -e "$dir" ] || continue
           if [ -d "$dir" ]; then
-            target_dir="$HOME/.config/waybar/configs/$(basename "$dir")"
-            [ -d "$target_dir" ] || cp -r "$dir" "$HOME/.config/waybar/configs/"
+            target_dir="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/configs/$(basename "$dir")"
+            [ -d "$target_dir" ] || cp -r "$dir" "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/configs/"
           fi
         done
         for file in "$DIRPATHw-backup-$BACKUP_DIR/configs"/*; do
           [ -e "$file" ] || continue
-          target_file="$HOME/.config/waybar/configs/$(basename "$file")"
-          [ -e "$target_file" ] || cp "$file" "$HOME/.config/waybar/configs/"
+          target_file="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/configs/$(basename "$file")"
+          [ -e "$target_file" ] || cp "$file" "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/configs/"
         done || true
         for file in "$DIRPATHw-backup-$BACKUP_DIR/style"/*; do
           [ -e "$file" ] || continue
           if [ -d "$file" ]; then
-            target_dir="$HOME/.config/waybar/style/$(basename "$file")"
-            [ -d "$target_dir" ] || cp -r "$file" "$HOME/.config/waybar/style/"
+            target_dir="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/style/$(basename "$file")"
+            [ -d "$target_dir" ] || cp -r "$file" "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/style/"
           else
-            target_file="$HOME/.config/waybar/style/$(basename "$file")"
-            [ -e "$target_file" ] || cp "$file" "$HOME/.config/waybar/style/"
+            target_file="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/style/$(basename "$file")"
+            [ -e "$target_file" ] || cp "$file" "${XDG_CONFIG_HOME:-$HOME/.config}/waybar/style/"
           fi
         done || true
         BACKUP_FILEw="$DIRPATHw-backup-$BACKUP_DIR/UserModules"
@@ -103,23 +111,24 @@ copy_waybar() {
       esac
     done
   else
-    cp -r "config/$DIRW" "$DIRPATHw" 2>&1 | tee -a "$log"
+    cp -r "$base/config/$DIRW" "$DIRPATHw" 2>&1 | tee -a "$log"
     echo -e "${OK:-[OK]} - Copy completed for ${YELLOW:-}$DIRW${RESET:-}" 2>&1 | tee -a "$log"
   fi
 }
 
 copy_phase2() {
   local log="$1"
-  local DIR="btop cava hypr Kvantum qt5ct qt6ct swappy wallust wlogout"
+  local base="${DOTFILES_DIR:-.}"
+  local DIR="btop cava hypr Kvantum qt5ct qt6ct starship swappy wallust wlogout yazi"
   for DIR_NAME in $DIR; do
-    local DIRPATH="$HOME/.config/$DIR_NAME"
+    local DIRPATH="${XDG_CONFIG_HOME:-$HOME/.config}/$DIR_NAME"
     if [ -d "$DIRPATH" ]; then
       echo -e "\n${NOTE:-[NOTE]} - Config for ${YELLOW:-}$DIR_NAME${RESET:-} found, attempting to back up."
       BACKUP_DIR=$(get_backup_dirname)
       mv "$DIRPATH" "$DIRPATH-backup-$BACKUP_DIR" 2>&1 | tee -a "$log"
     fi
-    if [ -d "config/$DIR_NAME" ]; then
-      cp -r "config/$DIR_NAME/" "$HOME/.config/$DIR_NAME" 2>&1 | tee -a "$log"
+    if [ -d "$base/config/$DIR_NAME" ]; then
+      cp -r "$base/config/$DIR_NAME/" "${XDG_CONFIG_HOME:-$HOME/.config}/$DIR_NAME" 2>&1 | tee -a "$log"
       echo "${OK:-[OK]} - Copy of config for ${YELLOW:-}$DIR_NAME${RESET:-} completed!" 2>&1 | tee -a "$log"
     else
       echo "${ERROR:-[ERROR]} - Directory config/$DIR_NAME does not exist to copy." 2>&1 | tee -a "$log"
@@ -128,41 +137,124 @@ copy_phase2() {
   install_terminal_configs "$log"
 }
 
+ensure_lua_keybinds() {
+  local log="$1"
+  local base="${DOTFILES_DIR:-.}"
+  local src_root="$base/config/hypr"
+  local dst_root="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+  local copied=0
+  local rel_dir src_dir src_file rel_path dst_file
+
+  for rel_dir in configs UserConfigs lua; do
+    src_dir="$src_root/$rel_dir"
+    [ -d "$src_dir" ] || continue
+
+    while IFS= read -r -d '' src_file; do
+      rel_path="${src_file#$src_root/}"
+      dst_file="$dst_root/$rel_path"
+
+      if [ ! -f "$dst_file" ]; then
+        mkdir -p "$(dirname "$dst_file")"
+        if cp -f "$src_file" "$dst_file" 2>&1 | tee -a "$log"; then
+          copied=1
+          echo "${NOTE:-[NOTE]} - Added missing Lua file: ${YELLOW:-}$rel_path${RESET:-}" 2>&1 | tee -a "$log"
+        else
+          echo "${ERROR:-[ERROR]} - Failed to add missing Lua file: ${YELLOW:-}$rel_path${RESET:-}" 2>&1 | tee -a "$log"
+        fi
+      fi
+    done < <(find "$src_dir" -maxdepth 1 -type f -name '*.lua' -print0)
+  done
+
+  if [ "$copied" -eq 1 ]; then
+    echo "${OK:-[OK]} - Lua fallback copy completed." 2>&1 | tee -a "$log"
+  else
+    echo "${INFO:-[INFO]} - Lua fallback check: no missing Lua files detected." 2>&1 | tee -a "$log"
+  fi
+}
+
 # Restore Animations and Monitor Profiles plus key hypr files from backup
 restore_hypr_assets() {
   local log="$1"
   local express_mode="$2"
 
-  local HYPR_DIR="$HOME/.config/hypr"
+  local HYPR_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+  local CONFIG_HOME="${XDG_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}}"
   local BACKUP_DIR
   BACKUP_DIR=$(get_backup_dirname)
   local BACKUP_HYPR_PATH="$HYPR_DIR-backup-$BACKUP_DIR"
 
   if [ -d "$BACKUP_HYPR_PATH" ]; then
-    if [ "$express_mode" -eq 1 ]; then
-      echo "${NOTE:-[NOTE]} Express mode: skipping automatic restoration of animations and monitor profiles." 2>&1 | tee -a "$log"
-      return
+    local backup_mode="conf"
+    if [ -f "$BACKUP_HYPR_PATH/hyprland.lua" ] || [ -f "$CONFIG_HOME/hyprland.lua" ]; then
+      backup_mode="lua"
     fi
 
-    echo -e "\n${NOTE:-[NOTE]} Restoring ${SKY_BLUE:-}Animations & Monitor Profiles${RESET:-} into ${YELLOW:-}$HYPR_DIR${RESET:-}..."
+    # Preserve active Lua entrypoint automatically to avoid dropping users
+    # back to hyprland.conf after an upgrade.
+    if [ -f "$BACKUP_HYPR_PATH/hyprland.lua" ]; then
+      cp -f "$BACKUP_HYPR_PATH/hyprland.lua" "$HYPR_DIR/hyprland.lua" 2>&1 | tee -a "$log"
+      echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}hyprland.lua${RESET:-}" 2>&1 | tee -a "$log"
+    fi
 
-    local DIR_B=("Monitor_Profiles" "animations" "wallpaper_effects")
-    for DIR_RESTORE in "${DIR_B[@]}"; do
-      local BACKUP_SUBDIR="$BACKUP_HYPR_PATH/$DIR_RESTORE"
-      if [ -d "$BACKUP_SUBDIR" ]; then
-        cp -r "$BACKUP_SUBDIR" "$HYPR_DIR/" 2>&1 | tee -a "$log"
-        echo "${OK:-[OK]} - Restored directory: ${MAGENTA:-}$DIR_RESTORE${RESET:-}" 2>&1 | tee -a "$log"
-      fi
-    done
+    if [ "$express_mode" -eq 1 ]; then
+      echo "${NOTE:-[NOTE]} Express mode: skipping automatic restoration of animations and monitor profile directories." 2>&1 | tee -a "$log"
+    else
+      echo -e "\n${NOTE:-[NOTE]} Restoring ${SKY_BLUE:-}Animations & Monitor Profiles${RESET:-} into ${YELLOW:-}$HYPR_DIR${RESET:-}..."
 
-    local FILE_B=("monitors.conf" "workspaces.conf")
-    for FILE_RESTORE in "${FILE_B[@]}"; do
-      local BACKUP_FILE="$BACKUP_HYPR_PATH/$FILE_RESTORE"
-      if [ -f "$BACKUP_FILE" ]; then
-        cp "$BACKUP_FILE" "$HYPR_DIR/$FILE_RESTORE" 2>&1 | tee -a "$log"
-        echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}$FILE_RESTORE${RESET:-}" 2>&1 | tee -a "$log"
+      # Fresh installs should apply repo defaults; do not restore a previous wallpaper.
+      # RUN_MODE is set by copy.sh (install|upgrade|express) and is visible here.
+      local DIR_B=("Monitor_Profiles" "animations")
+      if [ "${RUN_MODE:-}" != "install" ]; then
+        DIR_B+=("wallpaper_effects")
+      else
+        echo "${NOTE:-[NOTE]} Fresh install: skipping restore of wallpaper_effects so default wallpaper applies." 2>&1 | tee -a "$log"
       fi
-    done
+
+      for DIR_RESTORE in "${DIR_B[@]}"; do
+        local BACKUP_SUBDIR="$BACKUP_HYPR_PATH/$DIR_RESTORE"
+        if [ -d "$BACKUP_SUBDIR" ]; then
+          cp -r "$BACKUP_SUBDIR" "$HYPR_DIR/" 2>&1 | tee -a "$log"
+          echo "${OK:-[OK]} - Restored directory: ${MAGENTA:-}$DIR_RESTORE${RESET:-}" 2>&1 | tee -a "$log"
+        fi
+      done
+    fi
+
+    # Keep monitor/workspace state across upgrades, including express mode.
+    if [ "$backup_mode" = "lua" ]; then
+      local LUA_USER_DIR="$HYPR_DIR/UserConfigs"
+      mkdir -p "$LUA_USER_DIR"
+
+      local BACKUP_LUA_MONITORS=""
+      local BACKUP_LUA_WORKSPACES=""
+      if [ -f "$BACKUP_HYPR_PATH/UserConfigs/monitors.lua" ]; then
+        BACKUP_LUA_MONITORS="$BACKUP_HYPR_PATH/UserConfigs/monitors.lua"
+      elif [ -f "$BACKUP_HYPR_PATH/lua/monitors.lua" ]; then
+        BACKUP_LUA_MONITORS="$BACKUP_HYPR_PATH/lua/monitors.lua"
+      fi
+      if [ -f "$BACKUP_HYPR_PATH/UserConfigs/workspaces.lua" ]; then
+        BACKUP_LUA_WORKSPACES="$BACKUP_HYPR_PATH/UserConfigs/workspaces.lua"
+      elif [ -f "$BACKUP_HYPR_PATH/lua/workspaces.lua" ]; then
+        BACKUP_LUA_WORKSPACES="$BACKUP_HYPR_PATH/lua/workspaces.lua"
+      fi
+
+      if [ -n "$BACKUP_LUA_MONITORS" ]; then
+        cp -f "$BACKUP_LUA_MONITORS" "$LUA_USER_DIR/monitors.lua" 2>&1 | tee -a "$log"
+        echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}UserConfigs/monitors.lua${RESET:-}" 2>&1 | tee -a "$log"
+      fi
+      if [ -n "$BACKUP_LUA_WORKSPACES" ]; then
+        cp -f "$BACKUP_LUA_WORKSPACES" "$LUA_USER_DIR/workspaces.lua" 2>&1 | tee -a "$log"
+        echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}UserConfigs/workspaces.lua${RESET:-}" 2>&1 | tee -a "$log"
+      fi
+    else
+      local FILE_B=("monitors.conf" "workspaces.conf")
+      for FILE_RESTORE in "${FILE_B[@]}"; do
+        local BACKUP_FILE="$BACKUP_HYPR_PATH/$FILE_RESTORE"
+        if [ -f "$BACKUP_FILE" ]; then
+          cp "$BACKUP_FILE" "$HYPR_DIR/$FILE_RESTORE" 2>&1 | tee -a "$log"
+          echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}$FILE_RESTORE${RESET:-}" 2>&1 | tee -a "$log"
+        fi
+      done
+    fi
   fi
 }
 
@@ -205,17 +297,17 @@ cleanup_duplicate_userconfigs() {
     return
   fi
 
-  # Run de-dupe only for existing installs up to and including v2.3.19.
-  # For v2.3.20 and newer, the underlying duplication bug is fixed and
-  # this cleanup is no longer needed (and might mask future issues).
-  if version_gte "$current_version" "2.3.20"; then
-    echo "${INFO:-[INFO]} Skipping UserConfigs duplicate cleanup for detected version v$current_version (>= 2.3.20)." 2>&1 | tee -a "$log"
+  # Run de-dupe only for existing installs up to and including v2.3.18.
+  # For v2.3.19 and newer, UserConfigs should be left as-is to avoid
+  # removing user modifications.
+  if version_gte "$current_version" "2.3.19"; then
+    echo "${INFO:-[INFO]} Skipping UserConfigs duplicate cleanup for detected version v$current_version (>= 2.3.19)." 2>&1 | tee -a "$log"
     return
   fi
 
-  echo "${INFO:-[INFO]} Running UserConfigs duplicate cleanup for detected version v$current_version (<= 2.3.19)." 2>&1 | tee -a "$log"
+  echo "${INFO:-[INFO]} Running UserConfigs duplicate cleanup for detected version v$current_version (<= 2.3.18)." 2>&1 | tee -a "$log"
 
-  local HYPR_DIR="$HOME/.config/hypr"
+  local HYPR_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
   local BASE_DIR="$HYPR_DIR/configs"
   local USER_DIR="$HYPR_DIR/UserConfigs"
 
@@ -332,25 +424,27 @@ restore_user_configs() {
   local express_mode="$2"
   local old_version="$3"
 
-  local DIRPATH="$HOME/.config/hypr"
+  local DIRPATH="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
   local BACKUP_DIR
   BACKUP_DIR=$(get_backup_dirname)
   local BACKUP_DIR_PATH="$DIRPATH-backup-$BACKUP_DIR/UserConfigs"
+  local BACKUP_CONFIGS_PATH="$DIRPATH-backup-$BACKUP_DIR/configs"
 
   if [ -z "$BACKUP_DIR" ]; then
     echo "${ERROR:-[ERROR]} - Backup directory name is empty. Exiting." 2>&1 | tee -a "$log"
     exit 1
   fi
 
-  # In express mode we still want to run the de-dupe logic, but we skip
-  # the interactive restoration prompts so the workflow stays non-blocking.
-  local SKIP_RESTORE_PROMPTS=0
-  if [ -d "$BACKUP_DIR_PATH" ] && [ "$express_mode" -eq 1 ]; then
-    echo "${NOTE:-[NOTE]} Express mode: skipping UserConfigs restoration prompts." 2>&1 | tee -a "$log"
-    SKIP_RESTORE_PROMPTS=1
+  if [ "${RUN_MODE:-}" = "install" ]; then
+    if [ -d "$BACKUP_DIR_PATH" ]; then
+      echo "${NOTE:-[NOTE]} Preserving existing UserConfigs directory during install." 2>&1 | tee -a "$log"
+      rsync -a "$BACKUP_DIR_PATH/" "$DIRPATH/UserConfigs/" 2>&1 | tee -a "$log"
+      echo "${OK:-[OK]} - UserConfigs directory preserved." 2>&1 | tee -a "$log"
+    fi
+    return
   fi
 
-  if [ -d "$BACKUP_DIR_PATH" ] && [ "$SKIP_RESTORE_PROMPTS" -eq 0 ]; then
+  if [ -d "$BACKUP_DIR_PATH" ]; then
     local VERSION_FILE
     VERSION_FILE=$(find "$DIRPATH" -maxdepth 1 -name "v*.*.*" | head -n 1)
     local CURRENT_VERSION="999.9.9"
@@ -359,6 +453,10 @@ restore_user_configs() {
     fi
 
     local TARGET_VERSION="2.3.19"
+    local AUTO_RESTORE=0
+    if version_gte "$CURRENT_VERSION" "2.3.18"; then
+      AUTO_RESTORE=1
+    fi
 
     echo -e "${NOTE:-[NOTE]} Restoring previous ${MAGENTA:-}User-Configs${RESET:-}... " 2>&1 | tee -a "$log"
     printf "${WARNING:-}\\
@@ -371,13 +469,19 @@ restore_user_configs() {
 " >&2
 
     if version_gte "$CURRENT_VERSION" "$TARGET_VERSION"; then
-      read -r -p "${CAT:-[ACTION]} Do you want to restore your previous UserConfigs directory? (Y/n): " restore_userconfigs_dir
-      if [[ "$restore_userconfigs_dir" != [Nn]* ]]; then
-        echo "${NOTE:-[NOTE]} Restoring UserConfigs directory..." 2>&1 | tee -a "$log"
+      if [ "$express_mode" -eq 1 ] || [ "$AUTO_RESTORE" -eq 1 ]; then
+        echo "${NOTE:-[NOTE]} Restoring UserConfigs directory automatically." 2>&1 | tee -a "$log"
         rsync -a "$BACKUP_DIR_PATH/" "$DIRPATH/UserConfigs/" 2>&1 | tee -a "$log"
         echo "${OK:-[OK]} - UserConfigs directory restored." 2>&1 | tee -a "$log"
       else
-        echo "${NOTE:-[NOTE]} - Skipped restoring UserConfigs." 2>&1 | tee -a "$log"
+        read -r -p "${CAT:-[ACTION]} Do you want to restore your previous UserConfigs directory? (Y/n): " restore_userconfigs_dir
+        if [[ "$restore_userconfigs_dir" != [Nn]* ]]; then
+          echo "${NOTE:-[NOTE]} Restoring UserConfigs directory..." 2>&1 | tee -a "$log"
+          rsync -a "$BACKUP_DIR_PATH/" "$DIRPATH/UserConfigs/" 2>&1 | tee -a "$log"
+          echo "${OK:-[OK]} - UserConfigs directory restored." 2>&1 | tee -a "$log"
+        else
+          echo "${NOTE:-[NOTE]} - Skipped restoring UserConfigs." 2>&1 | tee -a "$log"
+        fi
       fi
     else
       echo -e "${NOTE:-[NOTE]} Detected version ${YELLOW:-}v$CURRENT_VERSION${RESET:-} (older than v$TARGET_VERSION). Using legacy restoration mode." 2>&1 | tee -a "$log"
@@ -387,11 +491,13 @@ restore_user_configs() {
         "ENVariables.conf"
         "LaptopDisplay.conf"
         "Laptops.conf"
+        "monitors.lua"
         "Startup_Apps.conf"
         "UserDecorations.conf"
         "UserAnimations.conf"
         "UserKeybinds.conf"
         "UserSettings.conf"
+        "workspaces.lua"
         "WindowRules.conf"
       )
 
@@ -408,21 +514,41 @@ restore_user_configs() {
             echo "${OK:-[OK]} - Migrated overlay for ${YELLOW:-}$FILE_NAME${RESET:-}" 2>&1 | tee -a "$log"
             continue
           fi
-
-          printf "\n${INFO:-[INFO]} Found ${YELLOW:-}$FILE_NAME${RESET:-} in hypr backup...\n"
-          read -r -p "${CAT:-[ACTION]} Do you want to restore ${YELLOW:-}$FILE_NAME${RESET:-} from backup? (Y/n): " file_restore
-
-          if [[ "$file_restore" != [Nn]* ]]; then
+          if [ "$express_mode" -eq 1 ] || [ "$AUTO_RESTORE" -eq 1 ]; then
             if cp "$BACKUP_FILE" "$DIRPATH/UserConfigs/$FILE_NAME"; then
               echo "${OK:-[OK]} - $FILE_NAME restored!" 2>&1 | tee -a "$log"
             else
               echo "${ERROR:-[ERROR]} - Failed to restore $FILE_NAME!" 2>&1 | tee -a "$log"
             fi
           else
-            echo "${NOTE:-[NOTE]} - Skipped restoring $FILE_NAME." 2>&1 | tee -a "$log"
+            printf "\n${INFO:-[INFO]} Found ${YELLOW:-}$FILE_NAME${RESET:-} in hypr backup...\n"
+            read -r -p "${CAT:-[ACTION]} Do you want to restore ${YELLOW:-}$FILE_NAME${RESET:-} from backup? (Y/n): " file_restore
+
+            if [[ "$file_restore" != [Nn]* ]]; then
+              if cp "$BACKUP_FILE" "$DIRPATH/UserConfigs/$FILE_NAME"; then
+                echo "${OK:-[OK]} - $FILE_NAME restored!" 2>&1 | tee -a "$log"
+              else
+                echo "${ERROR:-[ERROR]} - Failed to restore $FILE_NAME!" 2>&1 | tee -a "$log"
+              fi
+            else
+              echo "${NOTE:-[NOTE]} - Skipped restoring $FILE_NAME." 2>&1 | tee -a "$log"
+            fi
           fi
         fi
       done
+    fi
+  fi
+
+  if [ -d "$BACKUP_CONFIGS_PATH" ]; then
+    local restored_system_lua=0
+    local lua_file
+    mkdir -p "$DIRPATH/configs"
+    while IFS= read -r -d '' lua_file; do
+      cp -f "$lua_file" "$DIRPATH/configs/"
+      restored_system_lua=1
+    done < <(find "$BACKUP_CONFIGS_PATH" -maxdepth 1 -type f -name 'system_*.lua' -print0)
+    if [ "$restored_system_lua" -eq 1 ]; then
+      echo "${OK:-[OK]} - Restored migrated system Lua overlays to $DIRPATH/configs." 2>&1 | tee -a "$log"
     fi
   fi
 
@@ -444,7 +570,7 @@ restore_user_scripts() {
   local log="$1"
   local express_mode="$2"
 
-  local DIRSHPATH="$HOME/.config/hypr"
+  local DIRSHPATH="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
   local BACKUP_DIR
   BACKUP_DIR=$(get_backup_dirname)
   local BACKUP_DIR_PATH_S="$DIRSHPATH-backup-$BACKUP_DIR/UserScripts"
@@ -478,11 +604,37 @@ restore_user_scripts() {
   fi
 }
 
+restore_terminal_configs() {
+  local log="$1"
+  local express_mode="$2"
+
+  local GHOSTTY_DIR="${XDG_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}}/ghostty"
+  local BACKUP_DIR
+  BACKUP_DIR=$(get_backup_dirname)
+  local GHOSTTY_BACKUP="$GHOSTTY_DIR-backup-$BACKUP_DIR"
+
+  if [ -d "$GHOSTTY_BACKUP" ] && [ "$express_mode" -eq 1 ]; then
+    echo "${NOTE:-[NOTE]} Express mode: skipping Ghostty restore prompt." 2>&1 | tee -a "$log"
+    return
+  fi
+
+  if [ -d "$GHOSTTY_BACKUP" ] && [ "$express_mode" -eq 0 ]; then
+    echo -e "${NOTE:-[NOTE]} Restore previous ${MAGENTA:-}Ghostty${RESET:-} config?" 2>&1 | tee -a "$log"
+    read -r -p "${CAT:-[ACTION]} Do you want to restore Ghostty config from backup? (y/N): " restore_ghostty
+    if [[ "$restore_ghostty" == [Yy]* ]]; then
+      rm -rf "$GHOSTTY_DIR"
+      cp -a "$GHOSTTY_BACKUP" "$GHOSTTY_DIR" 2>&1 | tee -a "$log"
+      echo "${OK:-[OK]} - Ghostty config restored." 2>&1 | tee -a "$log"
+    else
+      echo "${NOTE:-[NOTE]} - Skipped restoring Ghostty config." 2>&1 | tee -a "$log"
+    fi
+  fi
+}
 restore_hypr_files() {
   local log="$1"
   local express_mode="$2"
 
-  local DIRPATH="$HOME/.config/hypr"
+  local DIRPATH="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
   local BACKUP_DIR
   BACKUP_DIR=$(get_backup_dirname)
   local BACKUP_DIR_PATH_F="$DIRPATH-backup-$BACKUP_DIR"
@@ -494,7 +646,7 @@ restore_hypr_files() {
   fi
 
   if [ -d "$BACKUP_DIR_PATH_F" ] && [ "$express_mode" -eq 0 ]; then
-    echo -e "${NOTE:-[NOTE]} Restoring some files in ${MAGENTA:-}$HOME/.config/hypr directory${RESET:-}..." 2>&1 | tee -a "$log"
+    echo -e "${NOTE:-[NOTE]} Restoring some files in ${MAGENTA:-}${XDG_CONFIG_HOME:-$HOME/.config}/hypr directory${RESET:-}..." 2>&1 | tee -a "$log"
 
     for FILE_RESTORE in "${FILES_2_RESTORE[@]}"; do
       local BACKUP_FILE="$BACKUP_DIR_PATH_F/$FILE_RESTORE"
@@ -512,7 +664,7 @@ restore_hypr_files() {
           echo "${NOTE:-[NOTE]} - Skipped restoring $FILE_RESTORE." 2>&1 | tee -a "$log"
         fi
       else
-        echo "${ERROR:-[ERROR]} - Backup file $BACKUP_FILE does not exist." 2>&1 | tee -a "$log"
+        echo "${NOTE:-[NOTE]} - Backup file $BACKUP_FILE does not exist. Skipping." 2>&1 | tee -a "$log"
       fi
     done
   fi

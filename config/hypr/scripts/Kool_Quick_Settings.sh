@@ -1,24 +1,79 @@
 #!/usr/bin/env bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
 # Rofi menu for KooL Hyprland Quick Settings (SUPER SHIFT E)
 # Updated for UserConfigs/configs separation
 
-# Modify this config file for default terminal and EDITOR
-config_file="$HOME/.config/hypr/UserConfigs/01-UserDefaults.conf"
+# Detect active Hyprland config mode (Lua entrypoint vs legacy .conf includes)
+config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+hypr_dir="$config_home/hypr"
+lua_entry="$hypr_dir/hyprland.lua"
+legacy_lua_entry="$config_home/hyprland.lua"
+if [[ -f "$lua_entry" || -f "$legacy_lua_entry" ]]; then
+    hypr_config_mode="lua"
+else
+    hypr_config_mode="conf"
+fi
 
-tmp_config_file=$(mktemp)
-sed 's/^\$//g; s/ = /=/g' "$config_file" > "$tmp_config_file"
-source "$tmp_config_file"
+# Resolve defaults file used to get terminal/editor values
+config_file="$hypr_dir/UserConfigs/01-UserDefaults.conf"
+lua_defaults_file="$hypr_dir/UserConfigs/user_defaults.lua"
+term="${term:-${TERM:-kitty}}"
+edit="${edit:-${EDITOR:-nano}}"
+visual="${visual:-${VISUAL:-}}"
+
+if [[ "$hypr_config_mode" == "conf" && -f "$config_file" ]]; then
+    tmp_config_file=$(mktemp)
+    sed 's/^\$//g; s/ = /=/g' "$config_file" > "$tmp_config_file"
+    source "$tmp_config_file"
+elif [[ "$hypr_config_mode" == "lua" ]]; then
+    defaults_source=""
+    if [[ -f "$lua_defaults_file" ]]; then
+        defaults_source="$lua_defaults_file"
+    fi
+    if [[ -n "$defaults_source" ]]; then
+        lua_term=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.term[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$defaults_source" | tail -n1)
+        lua_edit=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.edit[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$defaults_source" | tail -n1)
+        lua_visual=$(sed -n 's/^[[:space:]]*KOOLDOTS_DEFAULTS\.visual[[:space:]]*=[[:space:]]*"\(.*\)"[[:space:]]*$/\1/p' "$defaults_source" | tail -n1)
+        [[ -n "$lua_term" ]] && term="$lua_term"
+        [[ -n "$lua_edit" ]] && edit="$lua_edit"
+        [[ -n "$lua_visual" ]] && visual="$lua_visual"
+    fi
+fi
 # ##################################### #
 
 # variables
-configs="$HOME/.config/hypr/configs"
-UserConfigs="$HOME/.config/hypr/UserConfigs"
-rofi_theme="$HOME/.config/rofi/config-edit.rasi"
+configs="$hypr_dir/configs"
+UserConfigs="$hypr_dir/UserConfigs"
+rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-edit.rasi"
 msg=' ⁉️ Choose what to do ⁉️'
-iDIR="$HOME/.config/swaync/images"
-scriptsDir="$HOME/.config/hypr/scripts"
-UserScripts="$HOME/.config/hypr/UserScripts"
+iDIR="${XDG_CONFIG_HOME:-$HOME/.config}/swaync/images"
+scriptsDir="$hypr_dir/scripts"
+UserScripts="$hypr_dir/UserScripts"
+user_defaults_conf="$UserConfigs/01-UserDefaults.conf"
+user_defaults_lua="$UserConfigs/user_defaults.lua"
+user_env_conf="$UserConfigs/ENVariables.conf"
+user_env_lua="$UserConfigs/user_env.lua"
+user_keybinds_conf="$UserConfigs/UserKeybinds.conf"
+user_keybinds_lua="$UserConfigs/user_keybinds.lua"
+user_startup_conf="$UserConfigs/Startup_Apps.conf"
+user_startup_lua="$UserConfigs/user_startup.lua"
+user_window_rules_conf="$UserConfigs/WindowRules.conf"
+user_window_rules_lua="$UserConfigs/user_window_rules.lua"
+user_layer_rules_conf="$UserConfigs/LayerRules.conf"
+user_layer_rules_lua="$UserConfigs/user_layer_rules.lua"
+user_settings_conf="$UserConfigs/UserSettings.conf"
+user_settings_lua="$UserConfigs/user_settings.lua"
+user_decorations_conf="$UserConfigs/UserDecorations.conf"
+user_decorations_lua="$UserConfigs/user_decorations.lua"
+user_animations_conf="$UserConfigs/UserAnimations.conf"
+user_animations_lua="$UserConfigs/user_animations.lua"
+user_laptops_conf="$UserConfigs/Laptops.conf"
+user_laptops_lua="$UserConfigs/user_laptops.lua"
 
 # Function to show info notification
 show_info() {
@@ -26,6 +81,81 @@ show_info() {
         notify-send -i "$iDIR/info.png" "Info" "$1"
     else
         notify-send "Info" "$1"
+    fi
+}
+
+get_context_monitor_name() {
+    if ! command -v hyprctl >/dev/null 2>&1; then
+        return 1
+    fi
+    local monitor=""
+    if command -v jq >/dev/null 2>&1; then
+        monitor="$(hyprctl activeworkspace -j 2>/dev/null | jq -r '.monitor // empty' | head -n1)"
+        if [[ -z "$monitor" ]]; then
+            monitor="$(hyprctl monitors -j 2>/dev/null | jq -r '.[] | select(.focused) | .name' | head -n1)"
+        fi
+    else
+        monitor="$(hyprctl monitors 2>/dev/null | awk '/^Monitor/{name=$2} /focused: yes/{print name; exit}')"
+    fi
+    printf '%s' "$monitor"
+}
+
+# Determine whether an editor command is terminal-based (TUI)
+is_tui_editor() {
+    local -a cmd=("$@")
+    local bin base arg
+    [[ ${#cmd[@]} -eq 0 ]] && return 1
+
+    bin="${cmd[0]}"
+    base="$(basename "$bin")"
+
+    case "$base" in
+        vi|vim|nvim|nano|hx|helix|kak|micro|emacs-nox)
+            return 0
+            ;;
+        emacs|emacsclient)
+            for arg in "${cmd[@]:1}"; do
+                case "$arg" in
+                    -nw|--no-window-system|-t|--tty)
+                        return 0
+                        ;;
+                esac
+            done
+            return 1
+            ;;
+    esac
+
+    return 1
+}
+
+resolve_system_lua_file() {
+    local file_name="$1"
+    local preferred="$configs/$file_name"
+    local legacy="$UserConfigs/$file_name"
+    if [[ -f "$preferred" || ! -f "$legacy" ]]; then
+        printf '%s' "$preferred"
+    else
+        printf '%s' "$legacy"
+    fi
+}
+
+resolve_mode_file() {
+    local preferred="$1"
+    local fallback="$2"
+    if [[ -f "$preferred" || ! -f "$fallback" ]]; then
+        printf '%s' "$preferred"
+    else
+        printf '%s' "$fallback"
+    fi
+}
+
+resolve_user_overlay_file() {
+    local lua_file="$1"
+    local conf_file="$2"
+    if [[ "$hypr_config_mode" == "lua" ]]; then
+        resolve_mode_file "$lua_file" "$conf_file"
+    else
+        resolve_mode_file "$conf_file" "$lua_file"
     fi
 }
 # Function to toggle Rainbow Borders script availability and refresh UI components
@@ -181,6 +311,7 @@ Edit User Keybinds
 Edit User ENV variables
 Edit User Startup Apps (overlay)
 Edit User Window Rules (overlay)
+Edit User Layer Rules (overlay)
 Edit User Settings
 Edit User Decorations
 Edit User Animations
@@ -189,19 +320,25 @@ Edit User Laptop Settings
 Edit System Default Keybinds
 Edit System Default Startup Apps
 Edit System Default Window Rules
+Edit System Default Layer Rules
 Edit System Default Settings
+Change Starship Prompt
 --- UTILITIES ---
 Set SDDM Wallpaper
 Choose Kitty Terminal Theme
+Choose Ghostty Terminal Theme
 Configure Monitors (nwg-displays)
 Configure Workspace Rules (nwg-displays)
 GTK Settings (nwg-look)
 QT Apps Settings (qt6ct)
 QT Apps Settings (qt5ct)
+Set Hyprlock Wallpaper
 Choose Hyprland Animations
 Choose Monitor Profiles
 Choose Rofi Themes
 Search for Keybinds
+Toggle Waybar Weather units (C/F)
+Toggle Waybar Clock (12H/24H)
 Toggle Game Mode
 Switch Dark-Light Theme
 Rainbow Borders Mode
@@ -210,25 +347,52 @@ EOF
 
 # Main function to handle menu selection
 main() {
+    local quick_settings_monitor
+    quick_settings_monitor="$(get_context_monitor_name)"
     choice=$(menu | rofi -i -dmenu -config $rofi_theme -mesg "$msg")
     
     # Map choices to corresponding files
     case "$choice" in
-    	"Edit User Defaults") file="$UserConfigs/01-UserDefaults.conf" ;;
-        "Edit User ENV variables") file="$UserConfigs/ENVariables.conf" ;;
-        "Edit User Keybinds") file="$UserConfigs/UserKeybinds.conf" ;;
-        "Edit User Startup Apps (overlay)") file="$UserConfigs/Startup_Apps.conf" ;;
-        "Edit User Window Rules (overlay)") file="$UserConfigs/WindowRules.conf" ;;
-        "Edit User Settings") file="$configs/SystemSettings.conf"; show_info "Editing default settings. Copy to UserConfigs/UserSettings.conf to override." ;;
-        "Edit User Decorations") file="$UserConfigs/UserDecorations.conf" ;;
-        "Edit User Animations") file="$UserConfigs/UserAnimations.conf" ;;
-        "Edit User Laptop Settings") file="$UserConfigs/Laptops.conf" ;;
-        "Edit System Default Keybinds") file="$configs/Keybinds.conf" ;;
-        "Edit System Default Startup Apps") file="$configs/Startup_Apps.conf" ;;
-        "Edit System Default Window Rules") file="$configs/WindowRules.conf" ;;
-        "Edit System Default Settings") file="$configs/SystemSettings.conf" ;;
-        "Set SDDM Wallpaper") $scriptsDir/sddm_wallpaper.sh --normal ;;
+    	"Edit User Defaults")
+            file="$(resolve_user_overlay_file "$user_defaults_lua" "$user_defaults_conf")" ;;
+        "Edit User ENV variables")
+            file="$(resolve_user_overlay_file "$user_env_lua" "$user_env_conf")" ;;
+        "Edit User Keybinds")
+            file="$(resolve_user_overlay_file "$user_keybinds_lua" "$user_keybinds_conf")" ;;
+        "Edit User Startup Apps (overlay)")
+            file="$(resolve_user_overlay_file "$user_startup_lua" "$user_startup_conf")" ;;
+        "Edit User Window Rules (overlay)")
+            file="$(resolve_user_overlay_file "$user_window_rules_lua" "$user_window_rules_conf")" ;;
+        "Edit User Layer Rules (overlay)")
+            file="$(resolve_user_overlay_file "$user_layer_rules_lua" "$user_layer_rules_conf")" ;;
+        "Edit User Settings")
+            file="$(resolve_user_overlay_file "$user_settings_lua" "$user_settings_conf")" ;;
+        "Edit User Decorations")
+            file="$(resolve_user_overlay_file "$user_decorations_lua" "$user_decorations_conf")" ;;
+        "Edit User Animations")
+            file="$(resolve_user_overlay_file "$user_animations_lua" "$user_animations_conf")" ;;
+        "Edit User Laptop Settings")
+            file="$(resolve_user_overlay_file "$user_laptops_lua" "$user_laptops_conf")" ;;
+        "Edit System Default Keybinds")
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_keybinds.lua)"; else file="$configs/Keybinds.conf"; fi ;;
+        "Edit System Default Startup Apps")
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_startup.lua)"; else file="$configs/Startup_Apps.conf"; fi ;;
+        "Edit System Default Window Rules")
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_window_rules.lua)"; else file="$configs/WindowRules.conf"; fi ;;
+        "Edit System Default Layer Rules")
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_layer_rules.lua)"; else file="$configs/LayerRules.conf"; fi ;;
+        "Edit System Default Settings")
+            if [[ "$hypr_config_mode" == "lua" ]]; then file="$(resolve_system_lua_file system_settings.lua)"; else file="$configs/SystemSettings.conf"; fi ;;
+        "Change Starship Prompt") "$scriptsDir/ChangeStarshipPrompt.sh" ;;
+        "Set SDDM Wallpaper")
+            if [[ -n "$quick_settings_monitor" ]]; then
+                "$scriptsDir/sddm_wallpaper.sh" --normal "$quick_settings_monitor"
+            else
+                "$scriptsDir/sddm_wallpaper.sh" --normal
+            fi
+            ;;
         "Choose Kitty Terminal Theme") $scriptsDir/Kitty_themes.sh ;;
+        "Choose Ghostty Terminal Theme") $scriptsDir/Ghostty_themes.sh ;;
         "Configure Monitors (nwg-displays)") 
             if ! command -v nwg-displays &>/dev/null; then
                 notify-send -i "$iDIR/error.png" "E-R-R-O-R" "Install nwg-displays first"
@@ -259,19 +423,39 @@ main() {
                 exit 1
             fi
             qt5ct ;;
+        "Set Hyprlock Wallpaper")
+            if [[ -n "$quick_settings_monitor" ]]; then
+                "$scriptsDir/HyprlockWallpaperSelect.sh" "$quick_settings_monitor"
+            else
+                "$scriptsDir/HyprlockWallpaperSelect.sh"
+            fi
+            ;;
         "Choose Hyprland Animations") $scriptsDir/Animations.sh ;;
         "Choose Monitor Profiles") $scriptsDir/MonitorProfiles.sh ;;
         "Choose Rofi Themes") $scriptsDir/RofiThemeSelector.sh ;;
         "Search for Keybinds") $scriptsDir/KeyBinds.sh ;;
+        "Toggle Waybar Weather units (C/F)") $scriptsDir/Toggle-weather-waybar-units.sh ;;
+        "Toggle Waybar Clock (12H/24H)") $scriptsDir/ToggleWaybarTime.sh ;;
         "Toggle Game Mode") $scriptsDir/GameMode.sh ;;
         "Switch Dark-Light Theme") $scriptsDir/DarkLight.sh ;;
         "Rainbow Borders Mode") rainbow_borders_menu ;;
         *) return ;;  # Do nothing for invalid choices
     esac
 
-    # Open the selected file in the terminal with the text editor
+    # Open selected file using configured editor
     if [ -n "$file" ]; then
-        $term -e $edit "$file"
+        local -a edit_cmd term_cmd visual_cmd selected_cmd
+        read -r -a edit_cmd <<< "$edit"
+        read -r -a term_cmd <<< "$term"
+        [[ -n "$visual" ]] && read -r -a visual_cmd <<< "$visual"
+        selected_cmd=("${edit_cmd[@]}")
+        [[ ${#visual_cmd[@]} -gt 0 ]] && selected_cmd=("${visual_cmd[@]}")
+
+        if is_tui_editor "${selected_cmd[@]}"; then
+            "${term_cmd[@]}" -e "${selected_cmd[@]}" "$file"
+        else
+            "${selected_cmd[@]}" "$file" >/dev/null 2>&1 &
+        fi
     fi
 }
 

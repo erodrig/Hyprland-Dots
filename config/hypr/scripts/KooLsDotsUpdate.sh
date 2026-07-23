@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
 # simple bash script to check if update is available by comparing local version and github version
 
 # Local Paths
-local_dir="$HOME/.config/hypr"
-iDIR="$HOME/.config/swaync/images/"
+local_dir="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+iDIR="${XDG_CONFIG_HOME:-$HOME/.config}/swaync/images/"
 local_version=$(find "$local_dir" -maxdepth 1 -name 'v*' -printf '%f\n' 2>/dev/null | sort -V | tail -n 1 | sed 's/^v//')
 KooL_Dots_DIR="$HOME/Hyprland-Dots"
 
@@ -16,7 +21,7 @@ fi
 
 # GitHub URL - KooL's dots
 branch="main"
-github_url="https://github.com/JaKooLit/Hyprland-Dots/tree/$branch/config/hypr/"
+github_url="https://github.com/LinuxBeginnings/Hyprland-Dots/tree/$branch/config/hypr/"
 # Check for required tools (curl)
 if ! command -v curl &> /dev/null; then
   notify-send -i "$iDIR/error.png" "Need curl:" "curl not found. Please install curl."
@@ -64,7 +69,7 @@ else
   			exit 1
 		fi
         kitty -e bash -c "
-          git clone --depth=1 https://github.com/JaKooLit/Hyprland-Dots.git $KooL_Dots_DIR &&
+          git clone --depth=1 https://github.com/LinuxBeginnings/Hyprland-Dots.git $KooL_Dots_DIR &&
           cd \"$KooL_Dots_DIR\" &&
           chmod +x copy.sh &&
           ./copy.sh &&

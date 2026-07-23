@@ -1,4 +1,32 @@
 #!/usr/bin/env bash
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
+
+# Set a high-contrast whiptail theme unless the user already provided one
+if [ -z "${NEWT_COLORS:-}" ]; then
+  export NEWT_COLORS='
+root=white,black
+border=white,black
+window=white,black
+shadow=black,black
+title=yellow,black
+button=black,lightgray
+actbutton=black,cyan
+compactbutton=white,black
+textbox=white,black
+acttextbox=white,black
+entry=white,black
+label=white,black
+listbox=white,black
+actlistbox=black,cyan
+checkbox=white,black
+actcheckbox=black,cyan
+'
+fi
 
 # show_copy_menu
 # Arguments:

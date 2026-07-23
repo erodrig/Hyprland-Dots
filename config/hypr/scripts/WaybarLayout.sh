@@ -1,14 +1,19 @@
 #!/usr/bin/env bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
 # Script for waybar layout or configs
 
 IFS=$'\n\t'
 
 # Define directories
-waybar_layouts="$HOME/.config/waybar/configs"
-waybar_config="$HOME/.config/waybar/config"
-SCRIPTSDIR="$HOME/.config/hypr/scripts"
-rofi_config="$HOME/.config/rofi/config-waybar-layout.rasi"
+waybar_layouts="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/configs"
+waybar_config="${XDG_CONFIG_HOME:-$HOME/.config}/waybar/config"
+SCRIPTSDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts"
+rofi_config="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-waybar-layout.rasi"
 msg=' 🎌 NOTE: Some waybar LAYOUT NOT fully compatible with some STYLES'
 
 # Apply selected configuration

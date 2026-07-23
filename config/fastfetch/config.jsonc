@@ -1,132 +1,131 @@
-/* ----------- 💫 https://github.com/JaKooLit 💫 -------- */
-
 {
-"$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
-"logo": {
-"padding": {
-"top": 1
-}
-},
-"display": {
-"separator": " 󰑃  "
-},
-"modules": [
+  "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
+  "logo": {
+    // "type": "kitty",
+    // "source": "~/.config/fastfetch/ubuntu.png",
+    // "height": 10,
+    // "width": 20,
+    "type": "small",
+    "padding": {
+      "top": 3,
+      "left": 1,
+    },
+  },
+  "modules": [
     "break",
     {
-    "type": "os",
-    "key": " DISTRO",
-    "keyColor": "yellow"
-    },
-
-    {
-    "type": "kernel",
-    "key": "│ ├",
-    "keyColor": "yellow"
-    },    
-    {
-    "type": "command",
-    "key": "│ ├",
-    "text": "echo JaKooLit Version: ${DOTS_VERSION}",
-    "keyColor": "yellow"
+      "type": "custom",
+      "format": "\u001b[90m┌──────────────────────Hardware────────────────────────────┐",
     },
     {
-    "type": "packages",
-    "key": "│ ├󰏖",
-    "keyColor": "yellow"
+      "type": "host",
+      "key": " PC",
+      "keyColor": "green",
     },
     {
-    "type": "shell",
-    "key": "│ └",
-    "keyColor": "yellow"
+      "type": "cpu",
+      "key": "│ ├",
+      "keyColor": "green",
     },
     {
-    "type": "wm",
-    "key": " DE/WM",
-    "keyColor": "blue"
+      "type": "gpu",
+      "key": "│ ├󰍛",
+      "keyColor": "green",
     },
     {
-    "type": "wmtheme",
-    "key": "│ ├󰉼",
-    "keyColor": "blue"
+      "type": "memory",
+      "key": "│ ├󰍛",
+      "keyColor": "green",
     },
     {
-    "type": "icons",
-    "key": "│ ├󰀻",
-    "keyColor": "blue"
+      "type": "disk",
+      "key": "└ └",
+      "keyColor": "green",
     },
     {
-        "type": "cursor",
-        "key": "│ ├",
-        "keyColor": "blue"
+      "type": "custom",
+      "format": "\u001b[90m└──────────────────────────────────────────────────────────┘",
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "\u001b[90m┌──────────────────────Software──────────────────────┐",
     },
     {
-        "type": "terminalfont",
-        "key": "│ ├",
-        "keyColor": "blue"
+      "type": "os",
+      "key": " OS",
+      "keyColor": "yellow",
     },
     {
-    "type": "terminal",
-    "key": "│ └",
-    "keyColor": "blue"
+      "type": "kernel",
+      "key": "│ ├",
+      "keyColor": "yellow",
     },
     {
-    "type": "host",
-    "key": "󰌢 SYSTEM",
-    "keyColor": "green"
+      "type": "bios",
+      "key": "│ ├",
+      "keyColor": "yellow",
     },
     {
-    "type": "cpu",
-    "key": "│ ├󰻠",
-    "keyColor": "green"
+      "type": "packages",
+      "key": "│ ├󰏖",
+      "keyColor": "yellow",
     },
     {
-    "type": "gpu",
-    "key": "│ ├󰻑",
-    "format": "{2}",
-    "keyColor": "green"
+      "type": "shell",
+      "key": "└ └",
+      "keyColor": "yellow",
     },
     {
-            "type": "display",
-    "key": "│ ├󰍹",
-    "keyColor": "green",
-    "compactType": "original-with-refresh-rate"
+      "type": "wm",
+      "key": " WM",
+      "keyColor": "blue",
     },
     {
-    "type": "memory",
-    "key": "│ ├󰾆",
-    "keyColor": "green"
+      "type": "lm",
+      "key": "│ ├",
+      "keyColor": "blue",
     },
     {
-    "type": "swap",
-    "key": "│ ├󰓡",
-    "keyColor": "green"
+      "type": "wmtheme",
+      "key": "│ ├󰉼",
+      "keyColor": "blue",
     },
     {
-    "type": "uptime",
-    "key": "│ ├󰅐",
-    "keyColor": "green"
+      "type": "terminal",
+      "key": "└ └",
+      "keyColor": "blue",
     },
     {
-    "type": "display",
-    "key": "│ └󰍹",
-    "keyColor": "green"
+      "type": "custom",
+      "format": "\u001b[90m└────────────────────────────────────────────────────┘",
+    },
+    "break",
+    {
+      "type": "custom",
+      "format": "\u001b[90m┌─────────────────Uptime / Age / DT──────────────────┐",
     },
     {
-    "type": "sound",
-    "key": " AUDIO",
-    "format": "{2}",
-    "keyColor": "magenta"
+      "type": "command",
+      "key": "                   OS Age ",
+      "keyColor": "magenta",
+      "text": "birth_install=$(stat -c %W /); current=$(date +%s); time_progression=$((current - birth_install)); days_difference=$((time_progression / 86400)); echo $days_difference days",
     },
     {
-    "type": "player",
-    "key": "│ ├󰥠",
-    "keyColor": "magenta"
+      "type": "uptime",
+      "key": "                   Uptime ",
+      "keyColor": "magenta",
     },
     {
-    "type": "media",
-    "key": "│ └󰝚",
-    "keyColor": "magenta"
+      "type": "command",
+      "key": "             KoolDots Ver ",
+      "text": "echo v${DOTS_VERSION}",
+      "keyColor": "magenta",
     },
-    "break"
-    ]
+    {
+      "type": "custom",
+      "format": "\u001b[90m└────────────────────────────────────────────────────┘",
+    },
+    "break",
+  ],
 }

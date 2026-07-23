@@ -1,4 +1,4 @@
-/* ---- 💫 https://github.com/JaKooLit 💫 ---- */
+/* ---- 💫 https://github.com/LinuxBeginnings 💫 ---- */
 /* KooL Hyprland Rofi Style 5 */
 
 /* ---- Configuration ---- */
@@ -59,7 +59,7 @@ mainbox {
     enabled:                    true;
     orientation:                vertical;
 	padding:					8px;
-    background-image:           url("~/.config/rofi/.current_wallpaper", width);
+    background-image:           url("~/.config/rofi/.current_wallpaper_focused", width);
     children:                   [ "inputbar", "listbox" ];
     border-radius:              12px;
 }

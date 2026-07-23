@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
-# /* ---- 💫 https://github.com/JaKooLit 💫 ---- */  ##
+# ==================================================
+#  KoolDots (2026)
+#  Project URL: https://github.com/LinuxBeginnings
+#  License: GNU GPLv3
+#  SPDX-License-Identifier: GPL-3.0-or-later
+# ==================================================
 # Weather entrypoint: prefer Python (Open‑Meteo), fallback to legacy Bash (wttr.in)
 
 SCRIPT_DIR="$(dirname "$0")"
@@ -9,18 +14,18 @@ BASH_FALLBACK="$SCRIPT_DIR/Weather.sh"
 # Function to check network connectivity
 check_network() {
     # Try multiple methods to check network
-    if ping -c1 -W2 8.8.8.8 >/dev/null 2>&1; then
+    if ping -c1 -W1 8.8.8.8 >/dev/null 2>&1; then
         return 0
     fi
-    
-    if ping -c1 -W2 1.1.1.1 >/dev/null 2>&1; then
+
+    if ping -c1 -W1 1.1.1.1 >/dev/null 2>&1; then
         return 0
     fi
-    
-    if curl -s --connect-timeout 3 "https://ipinfo.io" >/dev/null 2>&1; then
+
+    if curl -s --connect-timeout 2 "https://ipinfo.io" >/dev/null 2>&1; then
         return 0
     fi
-    
+
     return 1
 }
 
