@@ -75,13 +75,15 @@ adjust_qt_quick_controls_style() {
   local qt_style_override="Fusion"
   local has_kvantum_qml=0
 
-  if find /usr/lib /usr/lib64 /usr/share -type d -path '*/qml/*/org/hyprland/style' -print -quit 2>/dev/null | grep -q .; then
+  # Arch installs the module at qml/org/..., Debian at qml/<triplet>/org/... — match both.
+  if find /usr/lib /usr/lib64 /usr/share -type d -path '*/qml/*org/hyprland/style' -print -quit 2>/dev/null | grep -q .; then
     style="org.hyprland.style"
   elif command -v dpkg >/dev/null 2>&1 && dpkg -s qml6-module-org-hyprland-style >/dev/null 2>&1; then
     style="org.hyprland.style"
   fi
 
-  if find /usr/lib /usr/lib64 /usr/share -type d -path '*/qml/*/kvantum' -print -quit 2>/dev/null | grep -q .; then
+  # Kvantum ships a QStyle plugin, not a QML module — probe the plugin instead.
+  if find /usr/lib /usr/lib64 -type f -name 'libkvantum.so' -path '*/plugins/styles/*' -print -quit 2>/dev/null | grep -q .; then
     has_kvantum_qml=1
     qt_style_override="kvantum"
   fi
@@ -101,9 +103,9 @@ adjust_qt_quick_controls_style() {
     echo "${WARN:-[WARN]} hyprland Qt style module not found. Using QT_QUICK_CONTROLS_STYLE=Basic to avoid Qt app crashes." 2>&1 | tee -a "$log" || true
   fi
   if [ "$has_kvantum_qml" -eq 1 ]; then
-    echo "${INFO:-[INFO]} Kvantum QML module detected. Using QT_STYLE_OVERRIDE=kvantum" 2>&1 | tee -a "$log" || true
+    echo "${INFO:-[INFO]} Kvantum Qt style plugin detected. Using QT_STYLE_OVERRIDE=kvantum" 2>&1 | tee -a "$log" || true
   else
-    echo "${WARN:-[WARN]} Kvantum QML module not found. Using QT_STYLE_OVERRIDE=Fusion as fallback." 2>&1 | tee -a "$log" || true
+    echo "${WARN:-[WARN]} Kvantum Qt style plugin not found. Using QT_STYLE_OVERRIDE=Fusion as fallback." 2>&1 | tee -a "$log" || true
   fi
 }
 
