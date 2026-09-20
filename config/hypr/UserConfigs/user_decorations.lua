@@ -31,7 +31,7 @@ hl.config({
     dim_special = 0.8,
     shadow = {
       enabled = true,
-      range = 2,
+      range = 1,
       render_power = 1,
       color = "rgba(8db4ffff)",
       color_inactive = "rgba(5f6578ff)",
@@ -41,7 +41,7 @@ hl.config({
       size = 6,
       passes = 3,
       new_optimizations = true,
-      xray = false,
+      xray = true,
       ignore_opacity = true,
       special = true,
       popups = true,

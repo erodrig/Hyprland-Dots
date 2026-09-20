@@ -4,100 +4,18 @@
 --  License: GNU GPLv3
 --  SPDX-License-Identifier: GPL-3.0-or-later
 -- ==================================================
--- User window-rule overrides template.
--- Add, override, or customize personal window rules here.
---
--- =============================================================================
--- WINDOW RULE SYNTAX & PROPERTIES (KoolDots Lua)
--- =============================================================================
--- • apply_window_rule({
---     name = "unique-rule-identifier",
---     match = {
---       class = "regex_pattern",          -- Matches window class (WM_CLASS)
---       title = "regex_pattern",          -- Matches window title
---       initial_class = "regex_pattern",  -- Matches class when first opened
---       initial_title = "regex_pattern",  -- Matches title when first opened
---       tag = "tag_name",                 -- Matches assigned tag
---       fullscreen = true | 0 | 1,        -- Matches fullscreen status
---     },
---     -- Action properties:
---     float = true | false,               -- Float the window
---     center = true | false,              -- Center floating window on screen
---     size = "width height",              -- e.g. "800 600" or "(monitor_w*0.6) (monitor_h*0.6)"
---     move = "x y",                       -- e.g. "100 100" or "72% 7%"
---     workspace = "1" | "special:name",   -- Target workspace
---     opacity = 0.95 | "0.95 0.85",       -- Active & inactive opacity
---     pin = true | false,                 -- Pin window across all workspaces
---     tag = "+tagname",                   -- Assign custom tag
---     idle_inhibit = "fullscreen" | "always" | "focus",
---     no_blur = true | false,             -- Disable background blur for this window
---     no_initial_focus = true | false,    -- Prevent stealing focus on spawn
---     keep_aspect_ratio = true | false,   -- Maintain aspect ratio when resized
---   })
---
--- TIP: Run `hyprctl activewindow` or `hyprctl clients` in a terminal to find
---      the exact `class` and `title` of any open window!
---
--- =============================================================================
--- EXAMPLES OF COMMON USER WINDOW RULES
--- =============================================================================
---
--- 1. FLOATING & CENTERING TOOLS & UTILITIES:
---    apply_window_rule({
---      name = "user-float-pavucontrol",
---      match = { class = "^(pavucontrol|org.pulseaudio.pavucontrol)$" },
---      float = true,
---      center = true,
---      size = "(monitor_w*0.5) (monitor_h*0.55)",
---    })
---
---    apply_window_rule({
---      name = "user-float-bluetooth-manager",
---      match = { class = "^(blueman-manager)$" },
---      float = true,
---      center = true,
---      size = "600 500",
---    })
---
--- 2. ASSIGNING APPS TO SPECIFIC WORKSPACES:
---    apply_window_rule({
---      name = "user-spotify-workspace",
---      match = { class = "^([Ss]potify)$" },
---      workspace = "9",
---    })
---
---    apply_window_rule({
---      name = "user-discord-workspace",
---      match = { class = "^([Dd]iscord|[Ww]ebCord|[Vv]esktop)$" },
---      workspace = "10",
---    })
---
--- 3. CUSTOM OPACITY RULES (TRANSPARENCY):
---    apply_window_rule({
---      name = "user-transparent-terminal",
---      match = { class = "^(kitty|ghostty|Alacritty)$" },
---      opacity = "0.90 0.80", -- active=0.90, inactive=0.80
---    })
---
--- 4. PICTURE-IN-PICTURE (FLOAT, MOVE & PIN):
---    apply_window_rule({
---      name = "user-pip-video",
---      match = { title = "^[Pp]icture-in-[Pp]icture$" },
---      float = true,
---      pin = true,
---      move = "72% 7%",
---      size = "(monitor_w*0.25) (monitor_h*0.25)",
---      keep_aspect_ratio = true,
---    })
---
--- 5. PREVENTING FOCUS STEALING ON STARTUP:
---    apply_window_rule({
---      name = "user-no-focus-slack",
---      match = { class = "^(Slack|slack)$" },
---      no_initial_focus = true,
---    })
---
--- =============================================================================
+
+-- User window rule overrides (auto-generated).
+-- Add your own rules with apply_window_rule({...})
+-- Example:
+-- apply_window_rule({
+--   name = "My Float Rule",
+--   match = { class = "^pavucontrol$" },
+--   float = true,
+--   center = true,
+-- })
+
+local user_window_rules_helper = nil
 do
   local source = (debug.getinfo(1, "S") or {}).source or ""
   local source_path = source:match("^@(.+)$")
@@ -129,13 +47,158 @@ do
     error("Failed to load user_window_rules_helper.lua from: " .. table.concat(tried_paths, ", "))
   end
 end
-
 local apply_window_rule = user_window_rules_helper.apply_window_rule
 
--- Example:
--- apply_window_rule({
---   name = "user-float-pavucontrol",
---   match = { class = "pavucontrol" },
---   float = true,
---   center = true,
--- })
+-- Converted from WindowRules.conf
+apply_window_rule({
+  name = "user-window-windowrule-001",
+  match = {
+    class = "^(ZapZap|com.rtosta.zapzap)$",
+  },
+  tag = "+im",
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-002",
+  match = {
+    class = "^([Zz]oom)$",
+  },
+  tag = "+messaging",
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-003",
+  match = {
+    tag = "browser",
+  },
+  workspace = 1,
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-004",
+  match = {
+    tag = "email",
+  },
+  workspace = 4,
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-005",
+  match = {
+    tag = "gamestore",
+  },
+  workspace = 5,
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-006",
+  match = {
+    tag = "messaging",
+  },
+  workspace = 5,
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-007",
+  match = {
+    tag = "im",
+  },
+  workspace = 7,
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-008",
+  match = {
+    tag = "games",
+  },
+  workspace = 8,
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-009",
+  match = {
+    tag = "screenshare",
+  },
+  workspace = "4 silent",
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-010",
+  match = {
+    class = "^(virt-manager)$",
+  },
+  workspace = "6 silent",
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-011",
+  match = {
+    class = "^(.virt-manager-wrapped)$",
+  },
+  workspace = "6 silent",
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-012",
+  match = {
+    tag = "multimedia",
+  },
+  workspace = "9 silent",
+})
+
+apply_window_rule({
+  name = "Discord",
+  match = {
+    class = "^(com\\.discordapp\\.Discord|discord)$",
+  },
+  workspace = 5,
+  float = true,
+  opacity = "0.94 0.86",
+  size = "(monitor_w*0.45) (monitor_h*0.5)",
+})
+
+apply_window_rule({
+  name = "Slack",
+  match = {
+    class = "^(Slack)$",
+  },
+  workspace = "special",
+  tile = true,
+})
+
+apply_window_rule({
+  name = "Obsidian",
+  match = {
+    class = "^(obsidian)$",
+  },
+  workspace = "special",
+  tile = true,
+})
+
+apply_window_rule({
+  name = "Steam-main",
+  match = {
+    class = "^([Ss]team)$",
+    title = "^([Ss]team)$",
+  },
+  move = "49% 7%",
+  size = "(monitor_w*0.5) (monitor_h*0.6)",
+})
+
+apply_window_rule({
+  name = "ncmpcpp",
+  match = {
+    class = "^([Nn]cmpcpp)$",
+  },
+  float = true,
+  size = "(monitor_w*0.45) (monitor_h*0.5)",
+  move = "50% 50%",
+})
+
+apply_window_rule({
+  name = "user-window-windowrule-013",
+  match = {
+    class = "^(code)$",
+  },
+  opacity = 0.8,
+})
