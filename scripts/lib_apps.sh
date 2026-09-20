@@ -37,7 +37,11 @@ enable_ags() {
     local OVERLAY_SA="$base/config/hypr/configs/Startup_Apps.conf"
     mkdir -p "$(dirname "$OVERLAY_SA")"
     touch "$OVERLAY_SA"
-    grep -qx 'exec-once = ags' "$OVERLAY_SA" || echo 'exec-once = ags' >>"$OVERLAY_SA"
+    # Match ANY existing 'ags' launcher, not just a bare one: upstream now ships this
+    # line with flags (e.g. --log-rules / -c overview), so an exact-match test never
+    # fires and appends a duplicate on every run.
+    grep -qE '^[[:space:]]*exec-once[[:space:]]*=[[:space:]]*ags([[:space:]]|$)' "$OVERLAY_SA" ||
+      echo 'exec-once = ags' >>"$OVERLAY_SA"
     sed -i '/#ags -q && ags &/s/^#//' "$base/config/hypr/scripts/RefreshNoWaybar.sh"
     sed -i '/#ags -q && ags &/s/^#//' "$base/config/hypr/scripts/Refresh.sh"
   fi
@@ -51,7 +55,11 @@ enable_quickshell() {
     local OVERLAY_SA="$base/config/hypr/configs/Startup_Apps.conf"
     mkdir -p "$(dirname "$OVERLAY_SA")"
     touch "$OVERLAY_SA"
-    grep -qx 'exec-once = qs' "$OVERLAY_SA" || echo 'exec-once = qs' >>"$OVERLAY_SA"
+    # Match ANY existing 'qs' launcher, not just a bare one: upstream now ships this
+    # line with flags (e.g. --log-rules / -c overview), so an exact-match test never
+    # fires and appends a duplicate on every run.
+    grep -qE '^[[:space:]]*exec-once[[:space:]]*=[[:space:]]*qs([[:space:]]|$)' "$OVERLAY_SA" ||
+      echo 'exec-once = qs' >>"$OVERLAY_SA"
     sed -i '/#pkill qs && qs &/s/^#//' "$base/config/hypr/scripts/RefreshNoWaybar.sh"
     sed -i '/#pkill qs && qs &/s/^#//' "$base/config/hypr/scripts/Refresh.sh"
   fi
