@@ -70,15 +70,21 @@ local unbind = user_keybinds_helper.unbind
 
 -- Converted from UserKeybinds.conf
 bind("SUPER", "V", exec_cmd("$HOME/.config/hypr/scripts/nerd-dictation-toggle.sh"))
-bind("SUPER ALT", "F", dispatch("fullscreen", ""), { description = "fullscreen" })
+-- dispatch(name, "") routes to hl.dsp.exec_raw(name), which returns ok and does
+-- nothing for these argument-less dispatchers. Call the API directly instead.
+bind("SUPER ALT", "F", function() hl.dispatch(hl.dsp.window.fullscreen()) end, { description = "fullscreen" })
 unbind("SUPER", "SPACE")
-bind("SUPER", "SPACE", exec_cmd("pkill rofi || true && rofi -show drun -modi drun, filebrowser, run, window"), { description = "app launcher" })
+-- Matches upstream's SUPER+D invocation: rofi's configs moved to
+-- ~/.config/hypr/rofi/, so without -config rofi reads the now-empty
+-- ~/.config/rofi/ and falls back to its built-in theme. The -modi list must
+-- also have no spaces; the .conf converter had inserted them.
+bind("SUPER", "SPACE", exec_cmd("pkill rofi || true; $HOME/.config/hypr/scripts/RofiFocusedWallpaperLink.sh >/dev/null 2>&1 || true; rofi -show drun -modi drun,filebrowser,run,window -config $HOME/.config/hypr/rofi/config.rasi"), { description = "app launcher" })
 unbind("SUPER ALT", "SPACE")
 bind("SUPER ALT", "SPACE", exec_cmd("hyprctl dispatch workspaceopt allfloat"), { description = "Float all windows" })
 unbind("SUPER SHIFT", "F")
-bind("SUPER SHIFT", "F", dispatch("togglefloating", ""), { description = "Float current window" })
+bind("SUPER SHIFT", "F", function() hl.dispatch(hl.dsp.window.float()) end, { description = "Float current window" })
 unbind("SUPER", "D")
-bind("SUPER", "D", dispatch("pseudo", ""), { description = "toggle pseudo (dwindle)" })
+bind("SUPER", "D", function() hl.dispatch(hl.dsp.window.pseudo()) end, { description = "toggle pseudo (dwindle)" })
 unbind("SUPER SHIFT", "Return")
 bind("SUPER SHIFT", "Return", exec_cmd("$HOME/.config/hypr/scripts/Dropterminal.sh $term"), { description = "DropDown terminal" })
 unbind("SUPER", "Tab")
