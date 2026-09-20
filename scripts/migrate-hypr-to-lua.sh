@@ -1490,6 +1490,19 @@ def files_match(p1, p2):
     except Exception:
         return False
 
+def lua_has_active_entries(lua_path):
+    """True when the .lua target declares anything outside comments."""
+    if lua_path is None or not lua_path.exists():
+        return False
+    try:
+        for raw in lua_path.read_text(encoding="utf-8", errors="ignore").splitlines():
+            stripped = raw.strip()
+            if stripped and not stripped.startswith("--"):
+                return True
+    except Exception:
+        return False
+    return False
+
 def lua_file_is_generated(lua_path):
     if lua_path is None or not lua_path.exists():
         return False
@@ -1513,9 +1526,14 @@ def lua_file_is_generated(lua_path):
         "No active env entries were found",
     ])
 
-if files_out["monitors"].exists():
+# Preserve only a target that actually declares something. copy.sh drops upstream's
+# comment-only monitors template into place before this runs, and the old
+# unconditional skip therefore discarded every rule in monitors.conf. The former
+# files_match() guard cannot help here: in a fork the repo's own monitors.conf
+# IS the customization, so matching it is the normal case, not a reason to skip.
+if files_out["monitors"].exists() and lua_has_active_entries(files_out["monitors"]):
     print(f"[INFO] Preserving existing custom Lua monitors file: {files_out['monitors']}")
-elif monitor_entries and not files_match(monitors_conf_path, src_monitors_conf_path):
+elif monitor_entries:
     monitor_lines = [
         "-- Monitors migrated from monitors.conf (auto-generated).",
         "-- Edit monitors.conf and rerun scripts/migrate-hypr-to-lua.sh to regenerate this file.",
@@ -1532,9 +1550,14 @@ elif not files_out["monitors"].exists():
 else:
     print(f"[INFO] Keeping existing {files_out['monitors']}")
 
-if files_out["workspaces"].exists():
+# Preserve only a target that actually declares something. copy.sh drops upstream's
+# comment-only workspaces template into place before this runs, and the old
+# unconditional skip therefore discarded every rule in workspaces.conf. The former
+# files_match() guard cannot help here: in a fork the repo's own workspaces.conf
+# IS the customization, so matching it is the normal case, not a reason to skip.
+if files_out["workspaces"].exists() and lua_has_active_entries(files_out["workspaces"]):
     print(f"[INFO] Preserving existing custom Lua workspaces file: {files_out['workspaces']}")
-elif workspace_entries and not files_match(workspaces_conf_path, src_workspaces_conf_path):
+elif workspace_entries:
     workspace_lines = [
         "-- Workspace rules migrated from workspaces.conf (auto-generated).",
         "-- Edit workspaces.conf and rerun scripts/migrate-hypr-to-lua.sh to regenerate this file.",
