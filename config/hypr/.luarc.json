@@ -1,6 +1,9 @@
 {
+  "$schema": "https://raw.githubusercontent.com/sumneko/vscode-lua/master/setting/schema.json",
+  "runtime.version": "LuaJIT",
   "diagnostics.globals": [
-    "hl"
+    "hl",
+    "KOOLDOTS_DEFAULTS"
   ],
   "workspace.checkThirdParty": false,
   "workspace.library": [

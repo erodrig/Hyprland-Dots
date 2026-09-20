@@ -1,19 +1,293 @@
 # Changelog — KoolDots
 
-## v2.3.26
+## v2.3.26.5
+
+- Fixed:
+  - Keyboard layout switcher `ALT + SHIFT`
+
+## v2.3.26.4
+
+- Fixed:
+  - Legacy WindowRules weren't getting migrated
+  - Missing or incorrect Keybinds
+    - Kitty
+    - Group/Ungroup
+  - Broken keybinds
+    - SUPER-R (Column presets scrolling layout)
+    - SUPER-G (Group/Ungroup)
+    - SUPER-ALT-Mouse Wheel (zoon)
+
+- Added:
+
+- Docs for overriding GTK and Icon themes
+  - In English and Spanish
+
+---
+
+## v2.3.26.3
 
 ## Fixed:
 
+- Missing keybinds
+- Global Theme now persistent
+  - Option added to return to wallpaper theme
+- Fixed default apps source order
+  - User variables now properly sourced before keybinds
+- Wallust directory moved to `~/.config/hypr/wallust`
+- `swaync` restarted with `SIG1`
+  - `swaync` doesn't have a handler for that
+  - Added `systemd --user` service and in-place IPC reloads instead
+  - Prevents race conditions and service crash loops
+  - Thanks to @hyperion-ak for finding and fixing this
+- Hardcoded `eDP-1` caused restore from sleep to fail and lose custom settings
+- Hardcoded entries in backlight scripts
+- TouchPad, keypad, slidepad detection
+  - Thanks to @goldyfruit for the fixes
+- `copy.sh` tries to update `~/.zprofile`
+  - NixOS systems using Home Manager use RO hard links
+  - Updated `copy.sh` to handle those and not exit with error
+
+## Updated:
+
+- Keyboard brightness improved across different HW
+- TouchPad auto detection of HW
+- Waybar backlight detection improved
+- Laptop lid switch detection improved with multi-monitor detection
+- Made global theme persistent
+  - Menu option to disable and go back to theme by wallpaper
+- `WindowRules.conf` isn't used in LUA mode
+  - Updated file to point to the .lua file
+  - Also added WindowRules.conf to the migration process properly
+- Moved `~/.config/wallust` to `~/.config/hypr/wallust`
+  - Phase 2 of moving out common config dirs for HL
+
+## Added:
+
+- Docs:
+  - Bindings
+  - Window Rules
+  - Adding Apps at startup
+  - HowTo Install and Upgrade KoolDots
+    - In English and Spanish
+
+---
+
+## v2.3.26.2
+
+## Fixed:
+
+- DropDownterminal warping you to another workspace
+- Changes to `user_keybinds.lua` not loading
+- `system_keybinds.lua` wasn't copied on updates
+- `togglesplit` in LUA mode
+- swaync: missing semicolons in style.css
+  - Thx to @hyperion-ak for fix
+- Waybar `ModulesCustom` rofi menu called default rofi menu
+- Some `.lua` files not copied on updates
+- `SUPER+CTRL L/R/U/D` Updated to using existing API
+- Added preservation code for `UserConfigs`
+  - Fixed migration code was another path to overwrite user files
+- Improved handling of RO symlinks in NixOS
+- Hypridle updated for LUA commands
+- Thanks to @goldyfruit
+  - He found four issues and filed them, including how to fix
+    - `LuaAutoReload` did not stop when it receives SIGTERM on the polling path.
+    - `MonitorProfile` overwrote `monitors.lua`
+    - Changes to workspace layouts wasn't persistent
+    - Animation selected not loading in LUA config
+    - Also some animation files had invalid settings
+- KB layout settings not set in `user_settings.lua`
+  - Added: Prompts for KB variant and model
+
+## Updated:
+
+- Improved weather units control.
+  - Now has system wide variable
+  - The Toggle Waybar Units now reads current value
+  - Change value restarts systemd environment variable
+
+## Added:
+
+- More defensive code for migration to lua
+- More examples in `.config/hypr/UserConfigs/user_keybinds.lua`
+  - Showing how to add or rebind keybinds
+
+---
+
+## v2.3.26.1
+
+## Fixed:
+
+- Added preservation code for `UserConfigs`
+  - Fixed migration code was another path to overwrite user files
+- `copy.sh` was overwritting `UserConfigs/monitor.lua`
+- On upgrade waybar config/style got reset (fix 2)
+  -Eliminated possible race condition in `awww-daemon`
+- Thanks to: @hyperion-ak for the fixes
+- Removed dead code from `initial-boot.sh`
+  - Thanks to @silesai
+- LCD keyboard brightness controls
+- Gestures fix 2
+  - `copy.sh` was overwritting gesture changes
+- Race condition in `awww-daemon` caused it to crash
+  - Changed `break 2` to just `break`
+  - Fix is applied with `copy.sh` on updates
+- Some users reported only light mode
+  - Fixed `LightDark.sh` script
+- Improved handling of user started apps
+- `startup.lua` wasn't calling `LuaAutoReload.sh`
+- Fixed user defaults
+  - Setting `nautilus` as file manager still called Thunar
+- Couldn't exit specialworkspace
+- Waybar config getting changed on each boot
+- Gestures in LUA workflow
+- Fixed Quick settings not opening system keybinds file
+
+## Added:
+
+- Added keybinds to increase/decrease brightness
+  - `CTRL+ALT+`` the `-/+` keys
+- `.luarc.json` file to the LUA subdirs
+  - Some editors will report `undefined global hl`
+
+## Updated:
+
+- Re-added laptop keybinds for brightness
+
+---
+
+## v2.3.26
+
+## Added:
+
+- `docs/HOWTO-Upgrade-Dotfiles.md`
+- Spanish translation: `docs/HOWTO-Upgrade-Dotfiles.es.md`
+- `nwg-dock-hyprland` that themes with wallpaper
+- LUA script `float.all.samesizze.lua`script
+  - `SUPER + CTRL + SPACE` to activate
+  - sets the sizes based on number of windows and resolution
+  - Note: Only works in LUA worklow, not Hyprlang
+- Documented `fastfetch` `config.json` on how to add graphical logo
+- `ToggleOpactiy.sh`
+
+- Selecting `zsh` now updates `.zprofile`
+
+  ```sh
+    if [ -f /etc/profile ]; then
+       source /etc/profile
+    fi
+  ```
+
+  - This should help resolve flatpak apps not showing in rofi menu
+  - Thanks to `@jfabernathy` for finding it
+
+- `docs/Keybinds.md` a layout of all the default keybinds
+- Option for event drive disable of eDP-1 on lid close
+- `kitty.conf` and `ghostty/config` are now saved to `UserConfigs` directory
+  - If file is gone or can't be read it will fall back to defaults
+- `qs-hyprview` an alternative to quickshell `overview`
+  - `CTRL-TAB` to activate
+  - Has search filter
+  - Optional layouts available
+    - Edit system keybinds to change the layout
+  - Added blur and dimming to layerrules for `qs-hyprview`
+  - Sample values for LUA `user_startup.lua` file
+- `select-hyprview-layout.sh`
+  - Runs rofi menu to select `qs-hyprview` layout
+  - Stores value in `.config/hypr/UserConfigs/hyprview-layout.conf`
+    - This prevents overwrite on updates
+
+## Fixed:
+
+- On upgrade waybar config/style got reset (fix 2)
+- Eliminated possible race condition in `awww-daemon`
+  - Thanks to: @hyperion-ak for the fixes
+- Removed dead code from `initial-boot.sh`
+  - Thanks to @silesai
+- Returning from `game mode` didn't restore user decoration values
+- `remove master` in `master layout` generate LUA runtime error
+- `cava` and `waybar` cava colors weren't syncing with wallpaper
+- Logout on powermenu hanging at black screen
+- Improved `RofiBeats.sh`, `RofiCalc`, `RainbowBorders-low-cpu`
+  - More compatible with LUA and improved hardening
+- `OMZ`themes changed. `copy.sh` checks and downloads them
+- `copy.sh` didn't replace LUA system files when already in LUA workflow
+- Duplicate waybars on Debian Forky+
+- `Float-all-windows.sh` in LUA mode no toggles float/tiled
+- Typo in change starship prompt menu
+- Extra `read` in `build-awww.sh`
+- `Toggle-Active-Windown-Audio.sh`
+  - Updated to work in LUA workflow
+- `Tak0-Per-Window-Switch.sh` for LUA workflow
+- `ToggleOpactiy.sh` in LUA workflow
+  - Added more levels to opacity
+  - Added desktop notficiations
+- `ChangeBlue.sh` in LUA workflow need `-r` flag
+  - Added levels blur `Disbled, Low, Medium, High, Ultra`
+  - LUA workflow the existing bindings didn't work
+- Fixed 2nd issue in yazi
+- ENV variables not set in LUA workflow
+- Logout session not working in LUA workflow
+- `togglesplit` in LUA workflow
+- Waybar doesn't restart after Dark/Light theme in Debian
+  - Thanks to @tomirgang for the fix
+- Not all waybar clocks togggled from 12hr/24hr correctly
+  - Thanks to @tomirgang for the fix
+- `hyprpolkitagent` fails to start at login
+  - Patched `Polkit.sh` to check for systemd service
+  - It was trying to run the agent twice causing crash
+- Fixed `ChangeBlur.sh` to be compatible with LUA workflow
+- Waybar fix caused two waybars to start in Debian. Fixed the fix
+- waybar startup delayed in Fedora when not using `hyprland-uwsm` session
+  - Found several issues with Fedora b/c of `waybar.service` with Fedora
+  - Redid the startup sequences
+  - Added gated check for `ags` as that was causing errors when not installed
+- Updated startup sequence, wallpaper, theme scripts to remove waybar startup delays
+- Default LUA startup file updated to match Hyprlang changes made for waybar
+- LUA migration script properly edits `~/.config/hypr/UserConfigs/monitors.lua`
+- LUA migration script failed to translate disabled monitors to LUA format
+  - I.e. for `eDP-1` laptop screens
+- Fixed `Spring-Curves.lua`
+  - Hyprland v0.56+ changed springs timing
+- Fixed `RainbowBorders` script to work with LUA config
+- Fixed lua migrate script to force uppercase `SHIFT`
+  - LUA API doesn't allow `shift`
+- Duplicate keybinds
+- `copy.sh` was ovewritting sddm background and wallpaper
+  - Also removed prompt for `Hypridle` restore
+- Background image in rofi didn't get updated in LUA workflow
 - Some animation bezier values out-of-range
   - Fixed both hyprlang and lua config files
 
 ## Updated:
 
+- Added bottom margin to `nwg-dock-hyprland`
+- `nwg-displays` removed add `Edit monitor config` in quick settings
+- Yazi config to support new APIs in current version
+  - Backed up old `main.lua` file for older versions of yazi
+- Layout menu has current bindings for each layout
+- Shortened `waybar` startup time
+- `copy.sh`
+  - Defaults to LUA on Fresh Install
+  - Upgrades and express upgrade now migrate Hyprlang to LUA
+  - It will also convert UserConfigs/\*.conf to LUA
+- Moved `qs-hyprview` to `alt - tab`
+  - Won't conflict with `alt - tab` used in applications
+- `copy.sh` to not overwrite all configs on update
+  - rofi menu, kitty/ghostty theme, waybar, wallpaper, etc.
+  - Also remove restore options for kitty /ghostty
+    - Those config files are in UserConfigs now
+- Quick Settings menu into submenus and quick links
+- Added script to toggle `qs-hyprview`
+  - It checks that it's running and if not restarts it
+- Quickshell config files now compatible with all debian versions
+- QuickShell config files were blocked on Trixie
+  - Trixie now supports quickshell, removed block
+- QuickShell overview to current version
+  - One issue fixed is moving apps between workspaces
+  - `overview` has not been updated in this project for a long time
+
 ## Changed:
-
-- `shadow range` changed to `2` from `3`
-
----
 
 ## v2.3.25
 

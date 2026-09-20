@@ -12,10 +12,10 @@ terminal=kitty
 PICTURES_DIR="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")"
 wallDIR="$PICTURES_DIR/wallpapers"
 SCRIPTSDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts"
-wallpaper_link="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/.current_wallpaper"
+wallpaper_link="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/.current_wallpaper"
 wallpaper_current="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/wallpaper_effects/.wallpaper_current"
 wallpaper_modified="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/wallpaper_effects/.wallpaper_modified"
-rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-wallpaper.rasi"
+rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/config-wallpaper.rasi"
 # Directory for swaync
 iDIR="${XDG_CONFIG_HOME:-$HOME/.config}/swaync/images"
 iDIRi="${XDG_CONFIG_HOME:-$HOME/.config}/swaync/icons"
@@ -355,7 +355,7 @@ sddm_simple="$sddm_themes_dir/simple_sddm_2"
 sddm_theme_conf="$sddm_simple/theme.conf"
 
 # rofi-wallust-sddm colors path
-rofi_wallust="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/wallust/colors-rofi.rasi"
+rofi_wallust="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/wallust/colors-rofi.rasi"
 if [[ ! -f "$rofi_wallust" ]]; then
     notify_err "Wallust colors file not found ($rofi_wallust). Aborting."
     exit 1
@@ -509,6 +509,7 @@ rofi_cmd=(rofi -i -show -dmenu -mesg "$menu_message" -theme-str "$rofi_override"
 if [[ -f "$rofi_theme" ]]; then
     rofi_cmd+=(-config "$rofi_theme")
 fi
+"${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts/RofiFocusedWallpaperLink.sh" >/dev/null 2>&1 || true
 
 choice="$(menu | "${rofi_cmd[@]}")"
 choice="${choice#"${choice%%[![:space:]]*}"}"

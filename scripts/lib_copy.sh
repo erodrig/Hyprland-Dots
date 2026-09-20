@@ -9,11 +9,16 @@
 
 copy_phase1() {
   local log="$1"
+  local run_mode="${2:-${RUN_MODE:-}}"
   local base="${DOTFILES_DIR:-.}"
-  local dirs="fastfetch kitty rofi swaync"
+  local dirs="fastfetch kitty swaync"
   for DIR2 in $dirs; do
     local DIRPATH="${XDG_CONFIG_HOME:-$HOME/.config}/$DIR2"
     if [ -d "$DIRPATH" ]; then
+      if [ "$run_mode" = "express" ]; then
+        echo -e "${NOTE:-[NOTE]} - Express mode: keeping existing ${YELLOW:-}$DIR2${RESET:-} config." 2>&1 | tee -a "$log"
+        continue
+      fi
       while true; do
         printf "\n${INFO:-[INFO]} Found ${YELLOW:-}$DIR2${RESET:-} config found in ${XDG_CONFIG_HOME:-$HOME/.config}/\n"
         echo -n "${CAT:-[ACTION]} Do you want to replace ${YELLOW:-}$DIR2${RESET:-} config? (y/n): "
@@ -25,17 +30,6 @@ copy_phase1() {
           echo -e "${NOTE:-[NOTE]} - Backed up $DIR2 to $DIRPATH-backup-$BACKUP_DIR." 2>&1 | tee -a "$log"
           cp -r "$base/config/$DIR2" "${XDG_CONFIG_HOME:-$HOME/.config}/$DIR2" 2>&1 | tee -a "$log"
           echo -e "${OK:-[OK]} - Replaced $DIR2 with new configuration." 2>&1 | tee -a "$log"
-          if [ "$DIR2" = "rofi" ]; then
-            if [ -d "$DIRPATH-backup-$BACKUP_DIR/themes" ]; then
-              for file in "$DIRPATH-backup-$BACKUP_DIR/themes"/*; do
-                [ -e "$file" ] || continue
-                cp -n "$file" "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/themes/" >>"$log" 2>&1 || true
-              done || true
-            fi
-            if [ -f "$DIRPATH-backup-$BACKUP_DIR/0-shared-fonts.rasi" ]; then
-              cp "$DIRPATH-backup-$BACKUP_DIR/0-shared-fonts.rasi" "${XDG_CONFIG_HOME:-$HOME/.config}/rofi/0-shared-fonts.rasi" >>"$log" 2>&1
-            fi
-          fi
           break
           ;;
         [Nn]*)
@@ -50,14 +44,44 @@ copy_phase1() {
       echo -e "${OK:-[OK]} - Copy completed for ${YELLOW:-}$DIR2${RESET:-}" 2>&1 | tee -a "$log"
     fi
   done
+
+  # Handle ~/.config/rofi: backup existing and ensure an empty directory exists
+  local rofi_dir="${XDG_CONFIG_HOME:-$HOME/.config}/rofi"
+  if [ -d "$rofi_dir" ]; then
+    if [ -n "$(ls -A "$rofi_dir" 2>/dev/null)" ]; then
+      local BACKUP_DIR
+      BACKUP_DIR=$(get_backup_dirname)
+      mv "$rofi_dir" "$rofi_dir-backup-$BACKUP_DIR" 2>&1 | tee -a "$log"
+      echo -e "${NOTE:-[NOTE]} - Backed up rofi to $rofi_dir-backup-$BACKUP_DIR." 2>&1 | tee -a "$log"
+      mkdir -p "$rofi_dir"
+      echo -e "${OK:-[OK]} - Created empty rofi directory at $rofi_dir." 2>&1 | tee -a "$log"
+      if [ -d "$rofi_dir-backup-$BACKUP_DIR/themes" ]; then
+        mkdir -p "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/themes"
+        for file in "$rofi_dir-backup-$BACKUP_DIR/themes"/*; do
+          [ -e "$file" ] || continue
+          cp -n "$file" "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/themes/" >>"$log" 2>&1 || true
+        done || true
+      fi
+      if [ -f "$rofi_dir-backup-$BACKUP_DIR/0-shared-fonts.rasi" ] && [ ! -f "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/0-shared-fonts.rasi" ]; then
+        cp "$rofi_dir-backup-$BACKUP_DIR/0-shared-fonts.rasi" "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/0-shared-fonts.rasi" >>"$log" 2>&1 || true
+      fi
+    fi
+  else
+    mkdir -p "$rofi_dir"
+  fi
 }
 
 copy_waybar() {
   local log="$1"
+  local run_mode="${2:-${RUN_MODE:-}}"
   local base="${DOTFILES_DIR:-.}"
   local DIRW="waybar"
   local DIRPATHw="${XDG_CONFIG_HOME:-$HOME/.config}/$DIRW"
   if [ -d "$DIRPATHw" ]; then
+    if [ "$run_mode" = "express" ]; then
+      echo -e "${NOTE:-[NOTE]} - Express mode: keeping existing ${YELLOW:-}$DIRW${RESET:-} config." 2>&1 | tee -a "$log"
+      return 0
+    fi
     while true; do
       echo -n "${CAT:-[ACTION]} Do you want to replace ${YELLOW:-}$DIRW${RESET:-} config? (y/n): "
       read DIR1_CHOICE
@@ -72,9 +96,16 @@ copy_waybar() {
           target_file="$DIRPATHw/$file"
           if [ -L "$symlink" ]; then
             symlink_target=$(readlink "$symlink")
-            if [ -f "$symlink_target" ]; then
-              rm -f "$target_file" && cp -f "$symlink_target" "$target_file"
+            target_name=$(basename "$symlink_target")
+            if [ "$file" = "config" ] && [ -f "$DIRPATHw/configs/$target_name" ]; then
+              rm -f "$target_file" && ln -sf "$DIRPATHw/configs/$target_name" "$target_file"
+            elif [ "$file" = "style.css" ] && [ -f "$DIRPATHw/style/$target_name" ]; then
+              rm -f "$target_file" && ln -sf "$DIRPATHw/style/$target_name" "$target_file"
+            elif [ -f "$symlink_target" ]; then
+              rm -f "$target_file" && ln -sf "$symlink_target" "$target_file"
             fi
+          elif [ -f "$symlink" ]; then
+            rm -f "$target_file" && cp -f "$symlink" "$target_file"
           fi
         done
         for dir in "$DIRPATHw-backup-$BACKUP_DIR/configs"/*; do
@@ -119,7 +150,7 @@ copy_waybar() {
 copy_phase2() {
   local log="$1"
   local base="${DOTFILES_DIR:-.}"
-  local DIR="btop cava hypr Kvantum qt5ct qt6ct starship swappy wallust wlogout yazi"
+  local DIR="btop cava hypr Kvantum nwg-dock-hyprland qt5ct qt6ct starship swappy wlogout yazi"
   for DIR_NAME in $DIR; do
     local DIRPATH="${XDG_CONFIG_HOME:-$HOME/.config}/$DIR_NAME"
     if [ -d "$DIRPATH" ]; then
@@ -134,7 +165,94 @@ copy_phase2() {
       echo "${ERROR:-[ERROR]} - Directory config/$DIR_NAME does not exist to copy." 2>&1 | tee -a "$log"
     fi
   done
+
+  # Handle ~/.config/wallust like rofi migration:
+  # keep wallust data under ~/.config/hypr/wallust and leave ~/.config/wallust empty
+  local wallust_dir="${XDG_CONFIG_HOME:-$HOME/.config}/wallust"
+  local hypr_wallust_dir="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/wallust"
+  if [ -d "$wallust_dir" ]; then
+    if [ -n "$(ls -A "$wallust_dir" 2>/dev/null)" ]; then
+      local BACKUP_DIR
+      BACKUP_DIR=$(get_backup_dirname)
+      mv "$wallust_dir" "$wallust_dir-backup-$BACKUP_DIR" 2>&1 | tee -a "$log"
+      echo -e "${NOTE:-[NOTE]} - Backed up wallust to $wallust_dir-backup-$BACKUP_DIR." 2>&1 | tee -a "$log"
+      mkdir -p "$wallust_dir" "$hypr_wallust_dir"
+      rsync -a --ignore-existing "$wallust_dir-backup-$BACKUP_DIR/" "$hypr_wallust_dir/" 2>&1 | tee -a "$log" || true
+      echo -e "${OK:-[OK]} - Migrated existing wallust files to ${YELLOW:-}$hypr_wallust_dir${RESET:-} and left ${YELLOW:-}$wallust_dir${RESET:-} empty." 2>&1 | tee -a "$log"
+    fi
+  else
+    mkdir -p "$wallust_dir"
+  fi
   install_terminal_configs "$log"
+}
+
+# Fresh install default: enable Hyprland Lua entrypoint (next release is Lua-only).
+enable_fresh_install_lua_config() {
+  local log="${1:-/dev/null}"
+  local hypr_dir
+  local src_entry
+  local base="${DOTFILES_DIR:-.}"
+  hypr_dir="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+  src_entry="$base/config/hypr/hyprland.lua.disable"
+
+  mkdir -p "$hypr_dir"
+
+  if [ -f "$hypr_dir/hyprland.lua" ]; then
+    rm -f "$hypr_dir/hyprland.lua.disable" 2>/dev/null || true
+    echo "${OK:-[OK]} - Fresh install: Hyprland Lua entrypoint already enabled." 2>&1 | tee -a "$log"
+    return 0
+  fi
+
+  if [ -f "$hypr_dir/hyprland.lua.disable" ]; then
+    mv -f "$hypr_dir/hyprland.lua.disable" "$hypr_dir/hyprland.lua"
+    echo "${OK:-[OK]} - Fresh install: enabled default Hyprland Lua config (hyprland.lua)." 2>&1 | tee -a "$log"
+    return 0
+  fi
+
+  if [ -f "$src_entry" ]; then
+    cp -f "$src_entry" "$hypr_dir/hyprland.lua"
+    echo "${OK:-[OK]} - Fresh install: installed default Hyprland Lua entrypoint from repo template." 2>&1 | tee -a "$log"
+    return 0
+  fi
+
+  echo "${WARN:-[WARN]} - Fresh install: no hyprland.lua template found; left Hyprlang entrypoint as-is." 2>&1 | tee -a "$log"
+  return 1
+}
+
+# Run scripts/migrate-hypr-to-lua.sh after upgrade restores when approved.
+migrate_hypr_to_lua_if_needed() {
+  local log="${1:-/dev/null}"
+  local migrate_flag="${2:-${MIGRATE_HYPR_TO_LUA:-0}}"
+  local base="${DOTFILES_DIR:-.}"
+  local migrate_script="$base/scripts/migrate-hypr-to-lua.sh"
+  local hypr_dir
+  hypr_dir="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
+
+  if [ "$migrate_flag" != "1" ]; then
+    echo "${NOTE:-[NOTE]} - LUA migration skipped by user choice." 2>&1 | tee -a "$log"
+    return 0
+  fi
+
+  if [ ! -x "$migrate_script" ] && [ -f "$migrate_script" ]; then
+    chmod +x "$migrate_script" 2>/dev/null || true
+  fi
+
+  if [ ! -f "$migrate_script" ]; then
+    echo "${ERROR:-[ERROR]} - Migration script not found: $migrate_script" 2>&1 | tee -a "$log"
+    return 1
+  fi
+
+  echo "${INFO:-[INFO]} - Migrating Hyprlang configuration to LUA via migrate-hypr-to-lua.sh..." 2>&1 | tee -a "$log"
+  if "$migrate_script" --yes 2>&1 | tee -a "$log"; then
+    echo "${OK:-[OK]} - Hyprland configuration migrated to LUA." 2>&1 | tee -a "$log"
+    return 0
+  fi
+
+  echo "${ERROR:-[ERROR]} - LUA migration failed. Hyprlang config may still be active." 2>&1 | tee -a "$log"
+  if [ -f "$hypr_dir/hyprland.lua.disable" ] && [ ! -f "$hypr_dir/hyprland.lua" ]; then
+    echo "${NOTE:-[NOTE]} - Lua entrypoint remains disabled at $hypr_dir/hyprland.lua.disable" 2>&1 | tee -a "$log"
+  fi
+  return 1
 }
 
 ensure_lua_keybinds() {
@@ -153,22 +271,62 @@ ensure_lua_keybinds() {
       rel_path="${src_file#$src_root/}"
       dst_file="$dst_root/$rel_path"
 
-      if [ ! -f "$dst_file" ]; then
+      # UserConfigs are protected: only add missing templates
+      if [ "$rel_dir" = "UserConfigs" ]; then
+        if [ ! -f "$dst_file" ]; then
+          mkdir -p "$(dirname "$dst_file")"
+          if cp -f "$src_file" "$dst_file" 2>&1 | tee -a "$log"; then
+            copied=1
+            echo "${NOTE:-[NOTE]} - Added missing user config template: ${YELLOW:-}$rel_path${RESET:-}" 2>&1 | tee -a "$log"
+          else
+            echo "${ERROR:-[ERROR]} - Failed to add missing user config template: ${YELLOW:-}$rel_path${RESET:-}" 2>&1 | tee -a "$log"
+          fi
+        fi
+      else
+        # System directories (configs, lua): always sync/overwrite from repo
         mkdir -p "$(dirname "$dst_file")"
         if cp -f "$src_file" "$dst_file" 2>&1 | tee -a "$log"; then
           copied=1
-          echo "${NOTE:-[NOTE]} - Added missing Lua file: ${YELLOW:-}$rel_path${RESET:-}" 2>&1 | tee -a "$log"
+          echo "${NOTE:-[NOTE]} - Synced system file: ${YELLOW:-}$rel_path${RESET:-}" 2>&1 | tee -a "$log"
         else
-          echo "${ERROR:-[ERROR]} - Failed to add missing Lua file: ${YELLOW:-}$rel_path${RESET:-}" 2>&1 | tee -a "$log"
+          echo "${ERROR:-[ERROR]} - Failed to sync system file: ${YELLOW:-}$rel_path${RESET:-}" 2>&1 | tee -a "$log"
         fi
       fi
     done < <(find "$src_dir" -maxdepth 1 -type f -name '*.lua' -print0)
   done
 
+  # Sync root-level lua metadata and config files if present
+  for root_lua in "$src_root"/*.lua; do
+    [ -f "$root_lua" ] || continue
+    local root_lua_name
+    root_lua_name="$(basename "$root_lua")"
+    if [ "$root_lua_name" != "hyprland.lua.disable" ]; then
+      cp -f "$root_lua" "$dst_root/$root_lua_name" 2>&1 | tee -a "$log" || true
+    fi
+  done
+
+  # Ensure canonical system window rules delegate to lua/window_rules.lua (all 93 rules)
+  local sys_win_rules="$dst_root/configs/system_window_rules.lua"
+  local src_win_rules="$src_root/configs/system_window_rules.lua"
+  if [ -f "$src_win_rules" ]; then
+    if [ ! -f "$sys_win_rules" ] || grep -q "No active window rules were found" "$sys_win_rules" 2>/dev/null || ! grep -q "window_rules\.lua" "$sys_win_rules" 2>/dev/null; then
+      cp -f "$src_win_rules" "$sys_win_rules" 2>&1 | tee -a "$log" || true
+      echo "${OK:-[OK]} - Ensured canonical system window rules: ${YELLOW:-}configs/system_window_rules.lua${RESET:-}" 2>&1 | tee -a "$log"
+    fi
+  fi
+
+  # Patch existing user and system lua configs to fix startup readiness race condition
+  for f in "$dst_root/UserConfigs"/*.lua "$dst_root/configs"/*.lua "$dst_root/lua"/*.lua; do
+    [ -f "$f" ] || continue
+    if grep -q 'break 2;' "$f" 2>/dev/null; then
+      sed -i 's/break 2;/break;/g' "$f"
+    fi
+  done
+
   if [ "$copied" -eq 1 ]; then
-    echo "${OK:-[OK]} - Lua fallback copy completed." 2>&1 | tee -a "$log"
+    echo "${OK:-[OK]} - Lua files sync completed." 2>&1 | tee -a "$log"
   else
-    echo "${INFO:-[INFO]} - Lua fallback check: no missing Lua files detected." 2>&1 | tee -a "$log"
+    echo "${INFO:-[INFO]} - Lua files check: up to date." 2>&1 | tee -a "$log"
   fi
 }
 
@@ -176,34 +334,64 @@ ensure_lua_keybinds() {
 restore_hypr_assets() {
   local log="$1"
   local express_mode="$2"
+  local base="${DOTFILES_DIR:-.}"
 
   local HYPR_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr"
-  local CONFIG_HOME="${XDG_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}}"
   local BACKUP_DIR
   BACKUP_DIR=$(get_backup_dirname)
   local BACKUP_HYPR_PATH="$HYPR_DIR-backup-$BACKUP_DIR"
 
   if [ -d "$BACKUP_HYPR_PATH" ]; then
     local backup_mode="conf"
-    if [ -f "$BACKUP_HYPR_PATH/hyprland.lua" ] || [ -f "$CONFIG_HOME/hyprland.lua" ]; then
+    local backup_lua_entry="$BACKUP_HYPR_PATH/hyprland.lua"
+    local backup_lua_disabled="$BACKUP_HYPR_PATH/hyprland.lua.disable"
+    if [ -f "$backup_lua_entry" ]; then
       backup_mode="lua"
+    elif [ -f "$backup_lua_disabled" ]; then
+      # Explicit conf marker used by migrate-hypr-to-lua.sh while Lua is disabled.
+      backup_mode="conf"
     fi
 
-    # Preserve active Lua entrypoint automatically to avoid dropping users
-    # back to hyprland.conf after an upgrade.
-    if [ -f "$BACKUP_HYPR_PATH/hyprland.lua" ]; then
-      cp -f "$BACKUP_HYPR_PATH/hyprland.lua" "$HYPR_DIR/hyprland.lua" 2>&1 | tee -a "$log"
-      echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}hyprland.lua${RESET:-}" 2>&1 | tee -a "$log"
+    # Preserve Lua entrypoint only when the backup was already using Lua mode.
+    # Do not auto-enable or disable Lua on fresh install (handled by enable_fresh_install_lua_config).
+    local LUA_ENTRY_TEMPLATE="$base/config/hypr/hyprland.lua"
+    if [ ! -f "$LUA_ENTRY_TEMPLATE" ] && [ -f "$base/config/hypr/hyprland.lua.disable" ]; then
+      LUA_ENTRY_TEMPLATE="$base/config/hypr/hyprland.lua.disable"
+    fi
+    if [ "${RUN_MODE:-}" != "install" ]; then
+      if [ "$backup_mode" = "lua" ]; then
+        if [ -f "$LUA_ENTRY_TEMPLATE" ]; then
+          cp -f "$LUA_ENTRY_TEMPLATE" "$HYPR_DIR/hyprland.lua" 2>&1 | tee -a "$log"
+          echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}hyprland.lua${RESET:-} (lua mode preserved from repo template)" 2>&1 | tee -a "$log"
+        elif [ -f "$BACKUP_HYPR_PATH/hyprland.lua" ]; then
+          cp -f "$BACKUP_HYPR_PATH/hyprland.lua" "$HYPR_DIR/hyprland.lua" 2>&1 | tee -a "$log"
+          echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}hyprland.lua${RESET:-} (lua mode preserved from backup)" 2>&1 | tee -a "$log"
+        fi
+      else
+        rm -f "$HYPR_DIR/hyprland.lua" 2>/dev/null || true
+        echo "${NOTE:-[NOTE]} - Conf mode detected; skipping Lua entrypoint restore." 2>&1 | tee -a "$log"
+      fi
     fi
 
     if [ "$express_mode" -eq 1 ]; then
-      echo "${NOTE:-[NOTE]} Express mode: skipping automatic restoration of animations and monitor profile directories." 2>&1 | tee -a "$log"
+      echo "${NOTE:-[NOTE]} Express mode: preserving existing wallpaper effects from backup and skipping animations/monitor profile restores." 2>&1 | tee -a "$log"
+      local BACKUP_WALLPAPER_DIR="$BACKUP_HYPR_PATH/wallpaper_effects"
+      if [ -d "$BACKUP_WALLPAPER_DIR" ]; then
+        rm -rf "$HYPR_DIR/wallpaper_effects"
+        cp -r "$BACKUP_WALLPAPER_DIR" "$HYPR_DIR/" 2>&1 | tee -a "$log"
+        echo "${OK:-[OK]} - Restored directory: ${MAGENTA:-}wallpaper_effects${RESET:-}" 2>&1 | tee -a "$log"
+      fi
+      if [ -f "$BACKUP_HYPR_PATH/.initial_startup_done" ]; then
+        cp -f "$BACKUP_HYPR_PATH/.initial_startup_done" "$HYPR_DIR/.initial_startup_done" 2>&1 | tee -a "$log"
+        echo "${OK:-[OK]} - Preserved initial startup marker to avoid first-boot resets." 2>&1 | tee -a "$log"
+      fi
     else
       echo -e "\n${NOTE:-[NOTE]} Restoring ${SKY_BLUE:-}Animations & Monitor Profiles${RESET:-} into ${YELLOW:-}$HYPR_DIR${RESET:-}..."
 
       # Fresh installs should apply repo defaults; do not restore a previous wallpaper.
       # RUN_MODE is set by copy.sh (install|upgrade|express) and is visible here.
-      local DIR_B=("Monitor_Profiles" "animations")
+      # Note: animations is a system directory and remains managed by dotfiles (not restored from backup).
+      local DIR_B=("Monitor_Profiles")
       if [ "${RUN_MODE:-}" != "install" ]; then
         DIR_B+=("wallpaper_effects")
       else
@@ -220,7 +408,7 @@ restore_hypr_assets() {
     fi
 
     # Keep monitor/workspace state across upgrades, including express mode.
-    if [ "$backup_mode" = "lua" ]; then
+    if [ "${RUN_MODE:-}" != "install" ]; then
       local LUA_USER_DIR="$HYPR_DIR/UserConfigs"
       mkdir -p "$LUA_USER_DIR"
 
@@ -245,15 +433,17 @@ restore_hypr_assets() {
         cp -f "$BACKUP_LUA_WORKSPACES" "$LUA_USER_DIR/workspaces.lua" 2>&1 | tee -a "$log"
         echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}UserConfigs/workspaces.lua${RESET:-}" 2>&1 | tee -a "$log"
       fi
-    else
-      local FILE_B=("monitors.conf" "workspaces.conf")
-      for FILE_RESTORE in "${FILE_B[@]}"; do
-        local BACKUP_FILE="$BACKUP_HYPR_PATH/$FILE_RESTORE"
-        if [ -f "$BACKUP_FILE" ]; then
-          cp "$BACKUP_FILE" "$HYPR_DIR/$FILE_RESTORE" 2>&1 | tee -a "$log"
-          echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}$FILE_RESTORE${RESET:-}" 2>&1 | tee -a "$log"
-        fi
-      done
+
+      if [ "$backup_mode" != "lua" ]; then
+        local FILE_B=("monitors.conf" "workspaces.conf")
+        for FILE_RESTORE in "${FILE_B[@]}"; do
+          local BACKUP_FILE="$BACKUP_HYPR_PATH/$FILE_RESTORE"
+          if [ -f "$BACKUP_FILE" ]; then
+            cp "$BACKUP_FILE" "$HYPR_DIR/$FILE_RESTORE" 2>&1 | tee -a "$log"
+            echo "${OK:-[OK]} - Restored file: ${MAGENTA:-}$FILE_RESTORE${RESET:-}" 2>&1 | tee -a "$log"
+          fi
+        done
+      fi
     fi
   fi
 }
@@ -428,7 +618,6 @@ restore_user_configs() {
   local BACKUP_DIR
   BACKUP_DIR=$(get_backup_dirname)
   local BACKUP_DIR_PATH="$DIRPATH-backup-$BACKUP_DIR/UserConfigs"
-  local BACKUP_CONFIGS_PATH="$DIRPATH-backup-$BACKUP_DIR/configs"
 
   if [ -z "$BACKUP_DIR" ]; then
     echo "${ERROR:-[ERROR]} - Backup directory name is empty. Exiting." 2>&1 | tee -a "$log"
@@ -439,6 +628,10 @@ restore_user_configs() {
     if [ -d "$BACKUP_DIR_PATH" ]; then
       echo "${NOTE:-[NOTE]} Preserving existing UserConfigs directory during install." 2>&1 | tee -a "$log"
       rsync -a "$BACKUP_DIR_PATH/" "$DIRPATH/UserConfigs/" 2>&1 | tee -a "$log"
+      echo "${OK:-[OK]} - UserConfigs directory preserved." 2>&1 | tee -a "$log"
+    elif [ -d "${DIRPATH}-${BACKUP_DIR}/UserConfigs" ]; then
+      echo "${NOTE:-[NOTE]} Preserving existing UserConfigs directory during install." 2>&1 | tee -a "$log"
+      rsync -a "${DIRPATH}-${BACKUP_DIR}/UserConfigs/" "$DIRPATH/UserConfigs/" 2>&1 | tee -a "$log"
       echo "${OK:-[OK]} - UserConfigs directory preserved." 2>&1 | tee -a "$log"
     fi
     return
@@ -491,6 +684,11 @@ restore_user_configs() {
         "ENVariables.conf"
         "LaptopDisplay.conf"
         "Laptops.conf"
+        "LayerRules.conf"
+        "ghostty.conf"
+        "kitty.conf"
+        "hyprview-layout.conf"
+        "WorkSpaceRules.conf"
         "monitors.lua"
         "Startup_Apps.conf"
         "UserDecorations.conf"
@@ -499,6 +697,16 @@ restore_user_configs() {
         "UserSettings.conf"
         "workspaces.lua"
         "WindowRules.conf"
+        "user_animations.lua"
+        "user_decorations.lua"
+        "user_defaults.lua"
+        "user_env.lua"
+        "user_keybinds.lua"
+        "user_laptops.lua"
+        "user_layer_rules.lua"
+        "user_settings.lua"
+        "user_startup.lua"
+        "user_window_rules.lua"
       )
 
       for FILE_NAME in "${FILES_TO_RESTORE[@]}"; do
@@ -536,19 +744,6 @@ restore_user_configs() {
           fi
         fi
       done
-    fi
-  fi
-
-  if [ -d "$BACKUP_CONFIGS_PATH" ]; then
-    local restored_system_lua=0
-    local lua_file
-    mkdir -p "$DIRPATH/configs"
-    while IFS= read -r -d '' lua_file; do
-      cp -f "$lua_file" "$DIRPATH/configs/"
-      restored_system_lua=1
-    done < <(find "$BACKUP_CONFIGS_PATH" -maxdepth 1 -type f -name 'system_*.lua' -print0)
-    if [ "$restored_system_lua" -eq 1 ]; then
-      echo "${OK:-[OK]} - Restored migrated system Lua overlays to $DIRPATH/configs." 2>&1 | tee -a "$log"
     fi
   fi
 

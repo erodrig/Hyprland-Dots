@@ -19,6 +19,7 @@ fi
 config_home="${XDG_CONFIG_HOME:-${XDG_CONFIG_HOME:-$HOME/.config}}"
 hypr_dir="$config_home/hypr"
 keybinds_conf="$hypr_dir/configs/Keybinds.conf"
+system_laptop_conf="$hypr_dir/configs/Laptops.conf"
 user_keybinds_conf="$hypr_dir/UserConfigs/UserKeybinds.conf"
 laptop_conf="$hypr_dir/UserConfigs/Laptops.conf"
 lua_keybinds_conf="$hypr_dir/lua/keybinds.lua"
@@ -26,7 +27,7 @@ lua_user_keybinds="$hypr_dir/UserConfigs/user_keybinds.lua"
 lua_system_keybinds="$hypr_dir/configs/system_keybinds.lua"
 lua_legacy_system_keybinds="$hypr_dir/UserConfigs/system_keybinds.lua"
 lua_overrides="$hypr_dir/UserConfigs/user_overrides.lua"
-rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-keybinds.rasi"
+rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/config-keybinds.rasi"
 msg='☣️ NOTE ☣️: Clicking with Mouse or Pressing ENTER will have NO function'
 
 # detect active Hyprland config mode (Lua entrypoint vs legacy .conf includes)
@@ -46,11 +47,13 @@ if [[ "$hypr_config_mode" == "lua" ]]; then
   elif [[ -f "$lua_legacy_system_keybinds" ]]; then
     files+=("$lua_legacy_system_keybinds")
   fi
-  [[ -f "$lua_user_keybinds" ]] && files+=("$lua_user_keybinds")
   [[ -f "$lua_overrides" ]] && files+=("$lua_overrides")
+  [[ -f "$lua_user_keybinds" ]] && files+=("$lua_user_keybinds")
 else
-  files=("$keybinds_conf" "$user_keybinds_conf")
+  files=("$keybinds_conf")
+  [[ -f "$system_laptop_conf" ]] && files+=("$system_laptop_conf")
   [[ -f "$laptop_conf" ]] && files+=("$laptop_conf")
+  [[ -f "$user_keybinds_conf" ]] && files+=("$user_keybinds_conf")
 fi
 
 # Parse binds using the python script for speed
@@ -68,4 +71,5 @@ if [[ -f "/tmp/hypr_keybind_suggestions_file" ]]; then
 fi
 
 # use rofi to display the keybinds
+"${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts/RofiFocusedWallpaperLink.sh" >/dev/null 2>&1 || true
 printf '%s\n' "$display_keybinds" | rofi -dmenu -i -config "$rofi_theme" -mesg "$msg"

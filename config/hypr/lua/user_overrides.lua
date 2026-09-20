@@ -21,24 +21,33 @@ local function has_kvantum_qml_module()
   pipe:close()
   return output:match("%S") ~= nil
 end
+local function has_hyprland_qml_style_module()
+  local cmd = "find /usr/lib /usr/lib64 /usr/share -type d -path '*/qml/*/org/hyprland/style' -print -quit 2>/dev/null"
+  local pipe = io.popen(cmd, "r")
+  if not pipe then
+    return false
+  end
+  local output = pipe:read("*a") or ""
+  pipe:close()
+  return output:match("%S") ~= nil
+end
 
 local function apply_qt_style_fallbacks()
   if not hl or not hl.env then
     return
   end
 
-  if has_kvantum_qml_module() then
-    return
+  if not has_kvantum_qml_module() then
+    local style_override = (os.getenv("QT_STYLE_OVERRIDE") or ""):lower()
+    if style_override == "kvantum" or style_override == "kvantum-dark" then
+      hl.env("QT_STYLE_OVERRIDE", "Fusion")
+    end
   end
-
-  local style_override = (os.getenv("QT_STYLE_OVERRIDE") or ""):lower()
-  if style_override == "kvantum" or style_override == "kvantum-dark" then
-    hl.env("QT_STYLE_OVERRIDE", "Fusion")
-  end
-
-  local quick_controls = (os.getenv("QT_QUICK_CONTROLS_STYLE") or ""):lower()
-  if quick_controls == "kvantum" then
-    hl.env("QT_QUICK_CONTROLS_STYLE", "Basic")
+  if not has_hyprland_qml_style_module() then
+    local quick_controls = (os.getenv("QT_QUICK_CONTROLS_STYLE") or ""):lower()
+    if quick_controls == "" or quick_controls == "org.hyprland.style" then
+      hl.env("QT_QUICK_CONTROLS_STYLE", "Basic")
+    end
   end
 end
 
@@ -52,6 +61,35 @@ local function load_optional(path)
   end
   return false
 end
+
+local function has_active_hyprlang_content(path)
+  local handle = io.open(path, "r")
+  if not handle then
+    return false
+  end
+
+  for line in handle:lines() do
+    if line:match("^%s*[^#%s]") then
+      handle:close()
+      return true
+    end
+  end
+
+  handle:close()
+  return false
+end
+
+local legacyWindowRules = userDir .. "/WindowRules.conf"
+if has_active_hyprlang_content(legacyWindowRules) then
+  print(
+    "[WARN] Lua config ignores active rules in "
+      .. legacyWindowRules
+      .. "; migrate them to "
+      .. userDir
+      .. "/user_window_rules.lua"
+  )
+end
+
 local loaded_user_split = false
 
 local system_files = {
@@ -92,6 +130,39 @@ if not loaded_user_split then
   load_optional(userDir .. "/user_overrides.lua") -- legacy single-file support
 end
 apply_qt_style_fallbacks()
+
+-- Warn users if active rules are detected in legacy UserConfigs/*.conf files while running in Lua mode
+do
+  local function warn_if_legacy_conf_has_rules(conf_file, lua_file, pattern)
+    local conf_path = userDir .. "/" .. conf_file
+    local handle = io.open(conf_path, "r")
+    if not handle then
+      return
+    end
+    local has_active = false
+    for raw in handle:lines() do
+      local line = (raw or ""):gsub("^%s+", ""):gsub("%s+$", "")
+      if line ~= "" and not line:match("^#") and not line:match("^//") then
+        if pattern then
+          if line:match(pattern) then
+            has_active = true
+            break
+          end
+        else
+          has_active = true
+          break
+        end
+      end
+    end
+    handle:close()
+    if has_active then
+      print(string.format("[WARN] %s contains active configuration but is not loaded in Lua mode. Please use %s instead (or Quick Settings: SUPER+SHIFT+E).", conf_file, lua_file))
+    end
+  end
+
+  warn_if_legacy_conf_has_rules("WindowRules.conf", "user_window_rules.lua", "^windowrule")
+  warn_if_legacy_conf_has_rules("LayerRules.conf", "user_layer_rules.lua", "^layerrule")
+end
 
 -- Legacy compatibility: import UserKeybinds.conf when user_keybinds.lua is missing.
 do

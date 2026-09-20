@@ -7,7 +7,7 @@
 # ==================================================
 
 # Variables
-rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-emoji.rasi"
+rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/config-emoji.rasi"
 msg='** note ** 👀 Click or Return to choose || Ctrl V to Paste'
 
 # Check if rofi is already running
@@ -15,6 +15,7 @@ if pidof rofi > /dev/null; then
   pkill rofi
 fi
 
+"${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts/RofiFocusedWallpaperLink.sh" >/dev/null 2>&1 || true
 sed '1,/^# # DATA # #$/d' "$0" | \
 rofi -i -dmenu -mesg "$msg" -config $rofi_theme | \
 awk '{print $1}' | \

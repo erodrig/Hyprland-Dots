@@ -10,7 +10,11 @@ if ! command -v jq >/dev/null 2>&1; then
 fi
 
 workspace_json="$(hyprctl -j activeworkspace 2>/dev/null || true)"
-layout_name="$(jq -r '.tiledLayout // .tiled_layout // empty' <<<"$workspace_json")"
+layout_name="$(jq -r '.tiledLayout // .tiled_layout // .layout // empty' <<<"$workspace_json" 2>/dev/null || true)"
+
+if [[ -z "$layout_name" || "$layout_name" == "null" ]]; then
+  layout_name="$(hyprctl -j getoption general:layout 2>/dev/null | jq -r '.str // empty' 2>/dev/null || true)"
+fi
 
 if [[ "$layout_name" != "scrolling" ]]; then
   exit 0
@@ -53,4 +57,13 @@ for idx in "${!presets[@]}"; do
 done
 
 next_idx=$(( (closest_idx + 1) % ${#presets[@]} ))
-hyprctl dispatch layoutmsg "colresize ${presets[$next_idx]}" >/dev/null 2>&1 || true
+dispatch_layoutmsg() {
+  local msg="$1"
+  local output=""
+  output="$(hyprctl eval "hl.dispatch(hl.dsp.layout(\"${msg}\"))" 2>&1 || true)"
+  if [[ "$output" != "ok" ]]; then
+    hyprctl dispatch layoutmsg "$msg" >/dev/null 2>&1 || true
+  fi
+}
+
+dispatch_layoutmsg "colresize ${presets[$next_idx]}"

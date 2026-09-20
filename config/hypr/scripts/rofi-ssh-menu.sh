@@ -10,7 +10,7 @@
 set -euo pipefail
 
 SSH_CONFIG="${HOME}/.ssh/config"
-ROFI_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config.rasi"
+ROFI_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/config.rasi"
 MSG='Select a host to connect via SSH'
 
 notify() {
@@ -90,6 +90,7 @@ if pgrep -x "rofi" >/dev/null 2>&1; then
   pkill rofi
 fi
 
+"${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts/RofiFocusedWallpaperLink.sh" >/dev/null 2>&1 || true
 selection="$(printf '%s\n' "${menu_entries}" | rofi -dmenu -i -p "SSH" -mesg "${MSG}" -config "${ROFI_CONFIG}")"
 
 if [[ -z "${selection}" ]]; then

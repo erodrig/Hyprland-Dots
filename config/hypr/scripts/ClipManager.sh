@@ -8,7 +8,7 @@
 # Clipboard Manager. This script uses cliphist, rofi, and wl-copy.
 
 # Variables
-rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-clipboard.rasi"
+rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/config-clipboard.rasi"
 msg='👀 **note**  CTRL DEL = cliphist del (entry)   or   ALT DEL - cliphist wipe (all)'
 # Actions:
 # CTRL Del to delete an entry
@@ -20,6 +20,7 @@ if pidof rofi > /dev/null; then
 fi
 
 while true; do
+    "${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts/RofiFocusedWallpaperLink.sh" >/dev/null 2>&1 || true
     result=$(
         rofi -i -dmenu \
             -kb-custom-1 "Control-Delete" \

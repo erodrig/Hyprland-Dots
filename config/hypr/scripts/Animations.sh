@@ -17,7 +17,7 @@ iDIR="${XDG_CONFIG_HOME:-$HOME/.config}/swaync/images"
 SCRIPTSDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts"
 animations_dir="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/animations"
 UserConfigs="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/UserConfigs"
-rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-Animations.rasi"
+rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/config-Animations.rasi"
 config_home="${XDG_CONFIG_HOME:-$HOME/.config}"
 hypr_dir="$config_home/hypr"
 lua_entry="$hypr_dir/hyprland.lua"
@@ -45,6 +45,7 @@ if [[ -z "$animations_list" ]]; then
 fi
 
 # Rofi Menu
+"${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts/RofiFocusedWallpaperLink.sh" >/dev/null 2>&1 || true
 chosen_file=$(echo "$animations_list" | rofi -i -dmenu -config "$rofi_theme" -mesg "$msg")
 
 # Check if a file was selected

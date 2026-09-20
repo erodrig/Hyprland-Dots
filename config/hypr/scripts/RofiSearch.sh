@@ -33,7 +33,7 @@ if [[ -z "$Search_Engine" ]]; then
 fi
 
 # Rofi theme and message
-rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/config-search.rasi"
+rofi_theme="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/config-search.rasi"
 msg='‼️ **note** ‼️ search via default web browser'
 
 # Kill Rofi if already running before execution
@@ -42,6 +42,7 @@ if pgrep -x "rofi" >/dev/null; then
 fi
 
 # Open Rofi and pass the selected query to xdg-open for the configured search engine
+"${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts/RofiFocusedWallpaperLink.sh" >/dev/null 2>&1 || true
 query=$(printf '' | rofi -dmenu -config "$rofi_theme" -mesg "$msg")
 
 if [[ -z "$query" ]]; then

@@ -11,17 +11,9 @@ SCRIPTSDIR="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/scripts"
 # shellcheck source=/dev/null
 . "$SCRIPTSDIR/WallpaperCmd.sh"
 
-if command -v "$WWW_DAEMON" >/dev/null 2>&1 && command -v "$WWW_CMD" >/dev/null 2>&1 && ! pgrep -x "$WWW_DAEMON" >/dev/null 2>&1; then
-  "$WWW_DAEMON" "${WWW_DAEMON_ARGS[@]}" &
-fi
+wallpaper_ensure_daemon
 
-# Give the daemon a moment to become ready
-for _ in {1..50}; do
-  "$WWW_CMD" query >/dev/null 2>&1 && break
-  sleep 0.1
-done
-
-wallpaper_link="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/.current_wallpaper"
+wallpaper_link="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/.current_wallpaper"
 wallpaper_current="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/wallpaper_effects/.wallpaper_current"
 
 read_cached_wallpaper() {
@@ -38,9 +30,35 @@ get_monitors() {
   fi
 }
 
+wait_for_monitors() {
+  local monitors=""
+  for _ in {1..120}; do
+    monitors="$(get_monitors 2>/dev/null | awk 'NF')"
+    if [ -n "$monitors" ]; then
+      printf '%s\n' "$monitors"
+      return 0
+    fi
+    sleep 0.1
+  done
+  return 1
+}
+
+default_wallpaper_path() {
+  local pictures_dir wall_dir
+  pictures_dir="$(xdg-user-dir PICTURES 2>/dev/null || echo "$HOME/Pictures")"
+  wall_dir="$pictures_dir/wallpapers"
+
+  [ -d "$wall_dir" ] || return 1
+
+  find -L "$wall_dir" -type f \( \
+    -iname "*.jpg" -o -iname "*.jpeg" -o -iname "*.png" -o -iname "*.bmp" -o \
+    -iname "*.gif" -o -iname "*.webp" -o -iname "*.tiff" \
+  \) -print | LC_ALL=C sort | awk 'NR == 1 {print; exit}'
+}
+
 apply_wallpaper_for_monitor() {
   local monitor="$1"
-  local per_monitor_link="${XDG_CONFIG_HOME:-$HOME/.config}/rofi/.current_wallpaper_${monitor}"
+  local per_monitor_link="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/rofi/.current_wallpaper_${monitor}"
   local per_monitor_current="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/wallpaper_effects/.wallpaper_current_${monitor}"
   local wallpaper_path=""
 
@@ -91,6 +109,11 @@ apply_wallpaper_for_monitor() {
     fi
   fi
 
+  # Final fallback: use the first available wallpaper from the wallpapers directory.
+  if [ -z "$wallpaper_path" ]; then
+    wallpaper_path="$(default_wallpaper_path 2>/dev/null || true)"
+  fi
+
   if [ -n "$wallpaper_path" ] && [ -f "$wallpaper_path" ]; then
     local resize_mode
     resize_mode="$(wallpaper_resize_mode "$wallpaper_path" "$monitor")"
@@ -98,10 +121,24 @@ apply_wallpaper_for_monitor() {
       sleep 0.3
       "$WWW_CMD" img -o "$monitor" --resize "$resize_mode" "$wallpaper_path" >/dev/null 2>&1 &
     fi
+    printf '%s\n' "$wallpaper_path"
+    return 0
   fi
+
+  return 1
 }
 
+applied_wallpaper=""
 while read -r monitor; do
   [ -n "$monitor" ] || continue
-  apply_wallpaper_for_monitor "$monitor"
-done < <(get_monitors)
+  applied_path="$(apply_wallpaper_for_monitor "$monitor" || true)"
+  if [ -z "$applied_wallpaper" ] && [ -n "$applied_path" ] && [ -f "$applied_path" ]; then
+    applied_wallpaper="$applied_path"
+  fi
+done < <(wait_for_monitors || true)
+
+"$SCRIPTSDIR/RofiFocusedWallpaperLink.sh" >/dev/null 2>&1 || true
+
+if [ -n "$applied_wallpaper" ] && [ -x "$SCRIPTSDIR/WallustSwww.sh" ]; then
+  "$SCRIPTSDIR/WallustSwww.sh" "$applied_wallpaper" >/dev/null 2>&1 || true
+fi

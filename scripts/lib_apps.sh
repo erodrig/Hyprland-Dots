@@ -106,46 +106,63 @@ install_terminal_configs() {
   fi
 }
 
+apply_editor_selection_to_userconfigs() {
+  local log="${1:-/dev/null}"
+  local base="${DOTFILES_DIR:-.}"
+  local cfg_home="${XDG_CONFIG_HOME:-$HOME/.config}"
+  local editor="${KOOLDOTS_SELECTED_EDITOR:-}"
+  local visual="${KOOLDOTS_SELECTED_VISUAL:-}"
+
+  [ -z "$editor" ] && [ -z "$visual" ] && return 0
+
+  local defaults_files=()
+  [ -f "$base/config/hypr/UserConfigs/01-UserDefaults.conf" ] && defaults_files+=("$base/config/hypr/UserConfigs/01-UserDefaults.conf")
+  [ -f "$cfg_home/hypr/UserConfigs/01-UserDefaults.conf" ] && defaults_files+=("$cfg_home/hypr/UserConfigs/01-UserDefaults.conf")
+
+  for df in "${defaults_files[@]}"; do
+    if [ -n "$editor" ]; then
+      if grep -q '^[[:space:]#]*env[[:space:]]*=[[:space:]]*EDITOR,' "$df"; then
+        sed -i "s/^[[:space:]#]*env[[:space:]]*=[[:space:]]*EDITOR,.*/env = EDITOR,$editor #default editor/" "$df"
+      else
+        echo "env = EDITOR,$editor #default editor" >> "$df"
+      fi
+    fi
+    if [ -n "$visual" ]; then
+      if grep -q '^[[:space:]#]*env[[:space:]]*=[[:space:]]*VISUAL,' "$df"; then
+        sed -i "s/^[[:space:]#]*env[[:space:]]*=[[:space:]]*VISUAL,.*/env = VISUAL,$visual #default visual editor for quick settings (optional)/" "$df"
+      else
+        echo "env = VISUAL,$visual #default visual editor for quick settings (optional)" >> "$df"
+      fi
+    fi
+  done
+
+  local lua_defaults_files=()
+  [ -f "$base/config/hypr/UserConfigs/user_defaults.lua" ] && lua_defaults_files+=("$base/config/hypr/UserConfigs/user_defaults.lua")
+  [ -f "$cfg_home/hypr/UserConfigs/user_defaults.lua" ] && lua_defaults_files+=("$cfg_home/hypr/UserConfigs/user_defaults.lua")
+
+  for lf in "${lua_defaults_files[@]}"; do
+    if [ -n "$editor" ]; then
+      if grep -q 'KOOLDOTS_DEFAULTS\.edit' "$lf"; then
+        sed -i "s/^[[:space:]]*KOOLDOTS_DEFAULTS\.edit[[:space:]]*=.*/KOOLDOTS_DEFAULTS.edit = \"$editor\"/" "$lf"
+      fi
+    fi
+    if [ -n "$visual" ]; then
+      if grep -q 'KOOLDOTS_DEFAULTS\.visual' "$lf"; then
+        sed -i "s/^[[:space:]]*KOOLDOTS_DEFAULTS\.visual[[:space:]]*=.*/KOOLDOTS_DEFAULTS.visual = \"$visual\"/" "$lf"
+      fi
+    fi
+  done
+}
+
 choose_default_editor() {
   local log="$1"
   local base="${DOTFILES_DIR:-.}"
-  local defaults_file="$base/config/hypr/UserConfigs/01-UserDefaults.conf"
   local editor_set=0
-  set_env_default() {
-    local var_name="$1"
-    local value="$2"
-    local note="$3"
-    local tmp_file
-    tmp_file=$(mktemp)
 
-    awk -v var_name="$var_name" -v value="$value" -v note="$note" '
-      BEGIN { updated = 0 }
-      {
-        if ($0 ~ "^[[:space:]#]*env[[:space:]]*=[[:space:]]*" var_name ",") {
-          if (value != "") {
-            print "env = " var_name "," value note
-          } else {
-            print "#env = " var_name "," note
-          }
-          updated = 1
-        } else {
-          print $0
-        }
-      }
-      END {
-        if (!updated) {
-          if (value != "") {
-            print "env = " var_name "," value note
-          } else {
-            print "#env = " var_name "," note
-          }
-        }
-      }
-    ' "$defaults_file" > "$tmp_file" && mv "$tmp_file" "$defaults_file"
-  }
   update_editor() {
     local editor=$1
-    set_env_default "EDITOR" "$editor" " #default editor"
+    export KOOLDOTS_SELECTED_EDITOR="$editor"
+    apply_editor_selection_to_userconfigs "$log"
     echo "${OK:-[OK]} Default editor set to ${MAGENTA:-}$editor${RESET:-}." 2>&1 | tee -a "$log"
   }
   if command -v nvim &>/dev/null; then
@@ -192,10 +209,12 @@ choose_default_editor() {
   fi
 
   if [[ -n "$visual_value" ]]; then
-    set_env_default "VISUAL" "$visual_value" " #default visual editor for quick settings (optional)"
+    export KOOLDOTS_SELECTED_VISUAL="$visual_value"
+    apply_editor_selection_to_userconfigs "$log"
     echo "${OK:-[OK]} VISUAL editor set to ${MAGENTA:-}$visual_value${RESET:-}." 2>&1 | tee -a "$log"
   else
-    set_env_default "VISUAL" "" " #default visual editor for quick settings (optional)"
+    export KOOLDOTS_SELECTED_VISUAL=""
+    apply_editor_selection_to_userconfigs "$log"
     echo "${NOTE:-[NOTE]} VISUAL editor not set (optional)." 2>&1 | tee -a "$log"
   fi
 }
@@ -346,5 +365,63 @@ install_waybar_weather() {
     install_waybar_weather_nixos "$log"
   else
     install_waybar_weather_binary "$log"
+  fi
+}
+
+# Install Oh My Zsh (and bundled theme templates) when zsh is used and OMZ is missing.
+# Uses --unattended --keep-zshrc so it never blocks the script, doesn't hijack the user's
+# shell immediately, and preserves the existing .zshrc.
+ensure_oh_my_zsh() {
+  local log="${1:-/dev/null}"
+  local user_shell
+  user_shell="$(basename "${SHELL:-}")"
+
+  # Only trigger if the user's shell is zsh or zsh is installed
+  if [ "$user_shell" != "zsh" ] && ! command -v zsh >/dev/null 2>&1; then
+    return 0
+  fi
+
+  # Skip if Oh My Zsh is already installed in any standard location
+  local candidate
+  for candidate in \
+    "${ZSH:-}" \
+    "$HOME/.oh-my-zsh" \
+    "${ZDOTDIR:-$HOME}/.oh-my-zsh" \
+    "${XDG_DATA_HOME:-$HOME/.local/share}/oh-my-zsh" \
+    "/usr/share/oh-my-zsh" \
+    "/usr/share/ohmyzsh" \
+    "/opt/oh-my-zsh"; do
+    if [ -n "$candidate" ] && [ -d "$candidate/themes" ]; then
+      echo "${INFO:-[INFO]} Oh My Zsh themes already present at $candidate" 2>&1 | tee -a "$log"
+      return 0
+    fi
+  done
+
+  # Verify network / download tools before attempting install
+  if ! command -v curl >/dev/null 2>&1 && ! command -v wget >/dev/null 2>&1; then
+    echo "${WARN:-[WARN]} curl/wget not found; cannot install Oh My Zsh theme templates." 2>&1 | tee -a "$log"
+    return 1
+  fi
+  if ! command -v git >/dev/null 2>&1; then
+    echo "${WARN:-[WARN]} git not found; cannot install Oh My Zsh theme templates." 2>&1 | tee -a "$log"
+    return 1
+  fi
+
+  echo "${INFO:-[INFO]} Oh My Zsh not found - installing theme templates to ~/.oh-my-zsh..." 2>&1 | tee -a "$log"
+
+  local install_cmd
+  if command -v curl >/dev/null 2>&1; then
+    install_cmd='curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
+  else
+    install_cmd='wget -qO- https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh'
+  fi
+
+  # Run unattended without changing the default shell or overwriting .zshrc
+  if sh -c "$($install_cmd)" "" --unattended --keep-zshrc 2>&1 | tee -a "$log"; then
+    echo "${OK:-[OK]} Oh My Zsh theme templates installed successfully." 2>&1 | tee -a "$log"
+    return 0
+  else
+    echo "${WARN:-[WARN]} Oh My Zsh installation failed; theme switcher may only show 'Random'." 2>&1 | tee -a "$log"
+    return 1
   fi
 }
