@@ -150,7 +150,7 @@ copy_waybar() {
 copy_phase2() {
   local log="$1"
   local base="${DOTFILES_DIR:-.}"
-  local DIR="btop cava hypr Kvantum nwg-dock-hyprland qt5ct qt6ct starship swappy wlogout yazi"
+  local DIR="btop cava hypr Kvantum mpd mpDris2 nwg-dock-hyprland qt5ct qt6ct starship swappy wlogout yazi"
   for DIR_NAME in $DIR; do
     local DIRPATH="${XDG_CONFIG_HOME:-$HOME/.config}/$DIR_NAME"
     if [ -d "$DIRPATH" ]; then
@@ -165,6 +165,21 @@ copy_phase2() {
       echo "${ERROR:-[ERROR]} - Directory config/$DIR_NAME does not exist to copy." 2>&1 | tee -a "$log"
     fi
   done
+
+  # mpd keeps its runtime state (db, playlists, stickers) in the same dir as mpd.conf,
+  # so the backup-and-replace above would orphan it. Put it back.
+  local MPD_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mpd"
+  local MPD_BACKUP="$MPD_DIR-backup-${BACKUP_DIR:-}"
+  if [ -n "${BACKUP_DIR:-}" ] && [ -d "$MPD_BACKUP" ]; then
+    local MPD_STATE=("database" "state" "sticker.sql" "playlists")
+    for MPD_RESTORE in "${MPD_STATE[@]}"; do
+      if [ -e "$MPD_BACKUP/$MPD_RESTORE" ]; then
+        rm -rf "${MPD_DIR:?}/$MPD_RESTORE"
+        cp -rf "$MPD_BACKUP/$MPD_RESTORE" "$MPD_DIR/$MPD_RESTORE" 2>&1 | tee -a "$log"
+        echo "${OK:-[OK]} - Restored mpd state: ${MAGENTA:-}$MPD_RESTORE${RESET:-}" 2>&1 | tee -a "$log"
+      fi
+    done
+  fi
 
   # Handle ~/.config/wallust like rofi migration:
   # keep wallust data under ~/.config/hypr/wallust and leave ~/.config/wallust empty
