@@ -482,6 +482,32 @@ def source_examples(path):
             continue
         lines.append(f"-- {stripped}")
     return lines
+def conf_has_active_content(path):
+    """True when the hyprlang source still carries non-comment configuration."""
+    if not path.exists():
+        return False
+    for raw in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        stripped = raw.strip()
+        if stripped and not stripped.startswith("#"):
+            return True
+    return False
+
+TEMPLATE_MARKERS = (
+    "auto-generated",
+    "Converted from",
+    "No active entries were found",
+    "Source reference from",
+    "overrides template",
+    "comments only",
+)
+
+def lua_file_is_template(path):
+    """True when the .lua target is a generated stub rather than hand-written."""
+    if not path.exists():
+        return False
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    return any(marker in text for marker in TEMPLATE_MARKERS)
+
 def latest_legacy_file(path):
     legacy_root = path.parent / "LegacyConfigs"
     if not legacy_root.is_dir():
@@ -2299,9 +2325,15 @@ for name, source in [
     ("animations", animations_path),
     ("laptops", laptops_path),
 ]:
+    # Only keep a pre-existing .lua when it is genuinely the user's. copy.sh installs
+    # upstream stubs into UserConfigs/ before this runs, so an unconditional skip here
+    # silently discarded every active setting in the matching .conf.
     if files_out[name].exists():
-        print(f"[INFO] Preserving existing custom Lua {name} file: {files_out[name]}")
-        continue
+        if conf_has_active_content(source) and lua_file_is_template(files_out[name]):
+            print(f"[INFO] Regenerating stub Lua {name} file from active {source}")
+        else:
+            print(f"[INFO] Preserving existing custom Lua {name} file: {files_out[name]}")
+            continue
     title = f"-- User {name} overrides (auto-generated)."
     lines = [
         title,
