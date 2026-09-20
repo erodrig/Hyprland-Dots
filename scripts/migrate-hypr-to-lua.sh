@@ -1047,6 +1047,16 @@ MATCH_BOOL_FIELDS = {
     "modal",
 }
 
+# Effect fields whose value is a real boolean in Hyprland's Lua API. Hyprlang
+# spells these "on"/"off", which must become true/false: passing the string
+# through yields `hl.window_rule: field 'tile': boolean type requires a bool`.
+EFFECT_BOOL_FIELDS = {
+    "tile", "tiled", "float", "floating", "fullscreen", "fakefullscreen",
+    "pin", "pinned", "center", "no_focus", "no_anim", "no_blur", "no_shadow",
+    "no_border", "keep_aspect_ratio", "force_opaque", "dim_around", "opaque",
+    "blur", "stay_focused", "immediate", "no_initial_focus",
+}
+
 MATCH_KEYS = {
     "class", "title", "initialclass", "initialtitle", "tag", "xdgtag",
     "xwayland", "floating", "fullscreen", "pinned", "focus", "group", "modal", "onworkspace",
@@ -1135,7 +1145,7 @@ def parse_rule_item(item, rule, rule_type="window"):
         parts = item.split(None, 1)
         key = normalize_field(parts[0])
         value = parts[1] if len(parts) > 1 else "on"
-        rule[key] = scalar(value, bool_words=key in MATCH_BOOL_FIELDS)
+        rule[key] = scalar(value, bool_words=key in MATCH_BOOL_FIELDS or key in EFFECT_BOOL_FIELDS)
 
 def parse_block(lines, start_index):
     start_line = lines[start_index].strip().lower()
@@ -1158,7 +1168,11 @@ def parse_block(lines, start_index):
                 elif key == "name":
                     rule["name"] = lua_string(value)
                 else:
-                    rule[normalize_field(key)] = scalar(value, bool_words=normalize_field(key) in MATCH_BOOL_FIELDS)
+                    effect_key = normalize_field(key)
+                    rule[effect_key] = scalar(
+                        value,
+                        bool_words=effect_key in MATCH_BOOL_FIELDS or effect_key in EFFECT_BOOL_FIELDS,
+                    )
         i += 1
     return rule_type, rule, i
 
