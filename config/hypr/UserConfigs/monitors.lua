@@ -5,14 +5,33 @@
 --  SPDX-License-Identifier: GPL-3.0-or-later
 -- ==================================================
 
--- User monitor overrides for Lua workflow.
--- MonitorProfiles.sh writes selected Lua monitor profiles into this file.
--- Keep custom hl.monitor(...) entries here so upgrades preserve them.
+-- Monitors migrated from monitors.conf (auto-generated).
+-- Edit monitors.conf and rerun scripts/migrate-hypr-to-lua.sh to regenerate this file.
 
--- Example:
--- hl.monitor({
---     output = "eDP-1",
---     mode = "preferred",
---     position = "auto",
---     scale = "1",
--- })
+hl.monitor({
+    output = "HDMI-A-1",
+    mode = "2560x1440@143.97Hz",
+    position = "0x0",
+    scale = "1",
+})
+
+hl.monitor({
+    output = "",
+    mode = "highrr",
+    position = "auto",
+    scale = "1",
+})
+
+hl.monitor({
+    output = "",
+    mode = "highres",
+    position = "auto",
+    scale = "1",
+})
+
+hl.monitor({
+    output = "Virtual-1",
+    mode = "1920x1080@60",
+    position = "auto",
+    scale = "1",
+})
