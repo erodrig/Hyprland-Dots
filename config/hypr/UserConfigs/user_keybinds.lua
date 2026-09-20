@@ -89,7 +89,9 @@ bind("SUPER", "Tab", dispatch("changegroupactive", "f"), { description = "Change
 bind("SUPER SHIFT", "Tab", dispatch("changegroupactive", "b"), { description = "Change Group Back" })
 unbind("SUPER", "U")
 unbind("SUPER SHIFT", "U")
-bind("SUPER", "X", dispatch("togglespecialworkspace", ""), { description = "toggle special workspace" })
+-- hl.dsp.exec_raw("togglespecialworkspace") returns ok but silently does nothing,
+-- so the generic dispatch() path cannot express this one. Call the API directly.
+bind("SUPER", "X", function() hl.dispatch(hl.dsp.workspace.toggle_special()) end, { description = "toggle special workspace" })
 bind("SUPER SHIFT", "X", dispatch("movetoworkspace", "special"), { description = "move to special workspace" })
 unbind("SUPER", "P")
 bind("SUPER", "P", exec_cmd("$HOME/.config/hypr/scripts/ScreenShot.sh --now"), { description = "screenshot now" })
