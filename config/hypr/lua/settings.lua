@@ -20,8 +20,14 @@ hl.config({
     default_split_ratio = 1.0,
     split_bias = 0,
     precise_mouse_move = false,
-    special_scale_factor = 0.8,
   },
+})
+
+-- Replaces deprecated dwindle.special_scale_factor = 0.8:
+-- special workspaces get 10% margins each side (DP-3 is 2560x1440 logical).
+hl.workspace_rule({
+  workspace = "s[true]",
+  gaps_out = { top = 144, right = 256, bottom = 144, left = 256 },
 })
 
 hl.config({
