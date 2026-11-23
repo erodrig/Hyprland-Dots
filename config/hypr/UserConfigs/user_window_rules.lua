@@ -153,7 +153,7 @@ apply_window_rule({
   },
   workspace = 5,
   float = true,
-  opacity = "0.94 0.86",
+  opacity = "1.0 0.86",
   size = "(monitor_w*0.45) (monitor_h*0.5)",
 })
 
@@ -200,5 +200,5 @@ apply_window_rule({
   match = {
     class = "^(code)$",
   },
-  opacity = 0.8,
+  opacity = "1.0 0.8",
 })

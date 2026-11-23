@@ -97,6 +97,29 @@ hl.config({
   },
 })
 
+-- Focused window renders fully opaque: also overrides app-level alpha
+-- (e.g. kitty background_opacity), not just Hyprland's opacity multiplier.
+-- Unfocused windows keep their normal transparency.
+if _G.__focus_opaque_sub and _G.__focus_opaque_sub.remove then
+  pcall(function() _G.__focus_opaque_sub:remove() end)
+end
+local focus_opaque_prev = nil
+local function set_opaque(addr, value)
+  pcall(function()
+    hl.dispatch(hl.dsp.window.set_prop({ prop = "opaque", value = value, window = "address:" .. addr }))
+  end)
+end
+_G.__focus_opaque_sub = hl.on("window.active", function(win)
+  local addr = win and win.address
+  if focus_opaque_prev and focus_opaque_prev ~= addr then
+    set_opaque(focus_opaque_prev, "unset")
+  end
+  if addr and addr ~= "" then
+    set_opaque(addr, "1")
+  end
+  focus_opaque_prev = addr
+end)
+
 hl.config({
   group = {
     col = {
